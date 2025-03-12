@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
+@dataclass_json
 @dataclass
 class Address:
     street: str
@@ -8,12 +10,14 @@ class Address:
     state: str
     zip: str
 
+@dataclass_json
 @dataclass
 class ContactInfo:
     email: str
     phone: Optional[str] = None
     address: Optional[Address] = None
 
+@dataclass_json
 @dataclass
 class Document:
     id: str
@@ -22,6 +26,7 @@ class Document:
     name: Optional[str] = None
     uploadDate: Optional[str] = None
 
+@dataclass_json
 @dataclass
 class Photo:
     id: str
@@ -29,6 +34,7 @@ class Photo:
     dateTaken: Optional[str] = None
     description: Optional[str] = None
 
+@dataclass_json
 @dataclass
 class Lease:
     propertyId: str
@@ -41,6 +47,7 @@ class Lease:
     dueDate: Optional[int] = None
     documents: Optional[List[Document]] = None
 
+@dataclass_json
 @dataclass
 class Tenant:
     name: str
@@ -49,6 +56,7 @@ class Tenant:
     lease: Optional[Lease] = None
     documents: Optional[List[Document]] = None
 
+@dataclass_json
 @dataclass
 class Unit:
     unitNumber: str
@@ -57,6 +65,7 @@ class Unit:
     photos: Optional[List[Photo]] = None
     documents: Optional[List[Document]] = None
 
+@dataclass_json
 @dataclass
 class Entity:
     name: str
@@ -65,6 +74,7 @@ class Entity:
     taxId: Optional[str] = None
     documents: Optional[List[Document]] = None
 
+@dataclass_json
 @dataclass
 class Property:
     name: str
