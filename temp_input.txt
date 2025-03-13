@@ -1,6 +1,0 @@
-add a unit 1b under woodbridge with the following information:
-tenant Rebecca. phone ‭+1 (203) 710-9065‬
-security deposti $4,850
-rent $2,475
-start date 7/1/2024
-end date 6/30/2025 
