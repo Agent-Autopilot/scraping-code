@@ -26,7 +26,7 @@ class UpdateProcessor:
         
         Loads configuration from environment variables:
         - OPENAI_API_KEY: Required for API access
-        - GPT_MODEL: Uses gpt-4o-mini by default
+        - GPT_MODEL: Uses gpt-4o-mini
         """
         load_dotenv()
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))

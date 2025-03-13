@@ -68,12 +68,16 @@ Now, convert this text into property management instructions:
 
         try:
             print("\nSending text to OpenAI for conversion...")
+            print(f"Model: {self.model.split('#')[0].strip()}")
+            print(f"API Key: {self.client.api_key[:8]}...")
+            messages = [
+                {"role": "system", "content": "You are a property management system that converts unstructured text into clear instructions."},
+                {"role": "user", "content": prompt}
+            ]
+            print(f"Messages: {messages}")
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a property management system that converts unstructured text into clear instructions."},
-                    {"role": "user", "content": prompt}
-                ],
+                messages=messages,
                 temperature=0.1
             )
             
