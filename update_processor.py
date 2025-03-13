@@ -30,46 +30,85 @@ Current Schema:
 
 Text Input: "{text_input}"
 
-Analyze the input and respond with a tuple containing the update type and data in this exact format:
-('update_type', {{
-    'field1': 'value1',
-    'field2': 'value2',
-    ...
+Analyze the input and respond with a Python tuple containing the update type and data. Use None for null/missing values.
+Example formats:
+
+1. Creating a new unit with tenant:
+('unit', {{
+    'unit_number': '1B',
+    'unit_data': {{
+        'unitNumber': '1B',
+        'propertyId': 'wood-1',  # Use existing property ID
+        'currentTenant': {{
+            'name': 'Rebecca',
+            'contactInfo': {{
+                'phone': '+1 (203) 710-9065',
+                'email': None,
+                'address': None
+            }},
+            'lease': {{
+                'propertyId': 'wood-1',  # Match property ID
+                'unitId': '1B',  # Match unit number
+                'tenantId': 'tenant-2',  # Generate new ID
+                'startDate': '2024-07-01',
+                'endDate': '2025-06-30',
+                'rentAmount': 2475.0,
+                'securityDeposit': 4850.0,
+                'dueDate': 1
+            }}
+        }},
+        'photos': [],
+        'documents': []
+    }}
 }})
 
-Valid update types and their required fields:
-1. 'tenant': 
-   - unit_number: str
-   - tenant_data: dict with fields from Tenant class (name, contactInfo, etc.)
+2. Creating a new tenant in existing unit:
+('tenant', {{
+    'unit_number': '1A',
+    'tenant_data': {{
+        'name': 'New Tenant',
+        'contactInfo': {{
+            'email': 'tenant@email.com',
+            'phone': '555-0000',
+            'address': None
+        }},
+        'lease': {{
+            'propertyId': 'wood-1',
+            'unitId': '1A',
+            'tenantId': 'tenant-3',
+            'startDate': '2024-01-01',
+            'endDate': '2024-12-31',
+            'rentAmount': 2000.0,
+            'securityDeposit': 2000.0,
+            'dueDate': 1
+        }}
+    }}
+}})
 
-2. 'lease':
-   - unit_number: str
-   - lease_data: dict with fields from Lease class (startDate, endDate, rentAmount, etc.)
+3. Creating a new document:
+('document', {{
+    'entity_type': 'unit',
+    'entity_id': '1A',
+    'document_data': {{
+        'id': 'doc-3',
+        'type': 'lease',
+        'url': 'https://example.com/new-lease.pdf',
+        'name': 'New Lease Agreement',
+        'uploadDate': '2024-03-15'
+    }}
+}})
 
-3. 'unit':
-   - unit_number: str
-   - unit_data: dict with fields from Unit class
+Valid update types:
+1. 'unit' - For creating or updating units
+2. 'tenant' - For creating or updating tenant information
+3. 'lease' - For creating or updating lease information
+4. 'document' - For adding documents
+5. 'property' - For updating property information
+6. 'owner' - For updating owner information
 
-4. 'document':
-   - entity_type: str ('property' or 'unit')
-   - entity_id: str
-   - document_data: dict with ALL required fields:
-     * id: str (e.g., 'doc-123', 'doc-456', etc.)
-     * type: str (e.g., 'lease', 'insurance', etc.)
-     * url: str
-     * name: Optional[str]
-     * uploadDate: Optional[str] (use current date if not specified)
-
-For photos, include these fields:
-- id: str (e.g., 'photo-123', 'photo-456', etc.)
-- url: str
-- dateTaken: Optional[str]
-- description: Optional[str]
-
-Only respond with the update data tuple or 'NO_UPDATE' if no changes are needed.
-Be precise and only include fields that need to be updated.
-Always generate unique IDs for new documents and photos using the format shown above.
-Ensure all nested objects (like contactInfo) are properly structured."""
+For the current input, determine if it's a new entity creation or an update to an existing entity.
+Include all required fields and IDs for new entities.
+Only respond with the update data tuple using the exact format shown above, with None for missing values."""
 
     def _query_gpt(self, prompt: str, retry: bool = True) -> Union[Tuple[str, Dict[str, Any]], None]:
         """
@@ -78,9 +117,9 @@ Ensure all nested objects (like contactInfo) are properly structured."""
         """
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a property management AI assistant. Respond only with the requested tuple format or 'NO_UPDATE'."},
+                    {"role": "system", "content": "You are a property management AI assistant. Respond only with a valid Python tuple containing a string and a dictionary. Use None for null values."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1  # Low temperature for more consistent outputs
@@ -92,6 +131,8 @@ Ensure all nested objects (like contactInfo) are properly structured."""
                 return None
                 
             try:
+                # Replace "null" with "None" in the response
+                result = result.replace('null', 'None')
                 # Safely evaluate the response string as a Python tuple
                 update = eval(result)
                 if not isinstance(update, tuple) or len(update) != 2:
@@ -136,7 +177,9 @@ Ensure all nested objects (like contactInfo) are properly structured."""
             'tenant': ['unit_number', 'tenant_data'],
             'lease': ['unit_number', 'lease_data'],
             'unit': ['unit_number', 'unit_data'],
-            'document': ['entity_type', 'entity_id', 'document_data']
+            'document': ['entity_type', 'entity_id', 'document_data'],
+            'property': ['property_data'],
+            'owner': ['owner_data']
         }
         
         if update_type not in required_fields:
@@ -148,11 +191,30 @@ Ensure all nested objects (like contactInfo) are properly structured."""
                 print(f"Missing required field: {field}")
                 return False
                 
-        # Additional validation for nested objects
-        if update_type == 'tenant' and 'tenant_data' in update_data:
-            if 'contactInfo' not in update_data['tenant_data']:
-                print("Missing contactInfo in tenant_data")
-                return False
+        # Additional validation for new entities
+        if update_type == 'unit':
+            unit_data = update_data.get('unit_data', {})
+            if 'propertyId' not in unit_data:
+                # Set default property ID from schema
+                unit_data['propertyId'] = self.schema['property'].get('units', [{}])[0].get('propertyId', 'wood-1')
+            if 'currentTenant' in unit_data:
+                tenant = unit_data['currentTenant']
+                if 'lease' in tenant:
+                    lease = tenant['lease']
+                    if 'propertyId' not in lease:
+                        lease['propertyId'] = unit_data['propertyId']
+                    if 'unitId' not in lease:
+                        lease['unitId'] = unit_data['unitNumber']
+                    if 'tenantId' not in lease:
+                        # Generate new tenant ID
+                        existing_ids = set()
+                        for u in self.schema['property'].get('units', []):
+                            if u.get('currentTenant', {}).get('lease', {}).get('tenantId'):
+                                existing_ids.add(u['currentTenant']['lease']['tenantId'])
+                        i = len(existing_ids) + 1
+                        while f'tenant-{i}' in existing_ids:
+                            i += 1
+                        lease['tenantId'] = f'tenant-{i}'
                 
         return True
 
@@ -190,6 +252,14 @@ Ensure all nested objects (like contactInfo) are properly structured."""
                     update_data['entity_type'],
                     update_data['entity_id'],
                     update_data['document_data']
+                )
+            elif update_type == 'property':
+                return data_manager.update_property(
+                    update_data['property_data']
+                )
+            elif update_type == 'owner':
+                return data_manager.update_owner(
+                    update_data['owner_data']
                 )
             else:
                 print(f"Unsupported update type: {update_type}")

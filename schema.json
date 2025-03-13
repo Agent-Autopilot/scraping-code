@@ -1,25 +1,27 @@
 {
   "property": {
-    "name": "Woodbridge Apartments",
+    "name": "Woodbridge Duplex",
     "address": {
-      "street": "123 Main St",
+      "street": "10 Miles Ave",
       "city": "Woodbridge",
       "state": "CT",
       "zip": "06525"
     },
     "owner": {
-      "name": "Woodbridge LLC",
+      "name": "Woodbridge Community Partners LLC",
       "type": "LLC",
       "contactInfo": {
-        "email": "owner@woodbridge.com",
-        "phone": "555-0123",
+        "email": "vadim.tantsyura@gmail.com",
+        "phone": "6282599139",
         "address": {
-          "street": "456 Business Ave",
-          "city": "Woodbridge",
-          "state": "CT",
-          "zip": "06525"
+          "street": "3 Willow Ct",
+          "city": "Nyack",
+          "state": "NY",
+          "zip": "10960"
         }
-      }
+      },
+      "taxId": null,
+      "documents": null
     },
     "units": [
       {
@@ -29,19 +31,22 @@
           "name": "John Doe",
           "contactInfo": {
             "email": "john@email.com",
-            "phone": "555-0101"
+            "phone": "555-9999",
+            "address": null
           },
           "ssn": "123-45-6789",
           "lease": {
             "propertyId": "wood-1",
             "unitId": "1A",
             "tenantId": "tenant-1",
-            "startDate": "2024-01-01",
+            "startDate": "2024-03-01",
             "endDate": "2024-12-31",
-            "rentAmount": 1500,
-            "securityDeposit": 1500,
-            "dueDate": 1
-          }
+            "rentAmount": 1600.0,
+            "securityDeposit": 1500.0,
+            "dueDate": 1,
+            "documents": null
+          },
+          "documents": null
         },
         "photos": [
           {
@@ -49,8 +54,50 @@
             "url": "https://example.com/photo1.jpg",
             "dateTaken": "2024-01-01",
             "description": "Living Room"
+          },
+          {
+            "id": "photo-2",
+            "url": "https://example.com/photo2.jpg",
+            "dateTaken": "2024-02-01",
+            "description": "kitchen"
+          }
+        ],
+        "documents": [
+          {
+            "id": "doc-2",
+            "type": "lease",
+            "url": "https://example.com/lease.pdf",
+            "name": null,
+            "uploadDate": "today"
           }
         ]
+      },
+      {
+        "unitNumber": "1B",
+        "propertyId": "wood-1",
+        "currentTenant": {
+          "name": "Rebecca",
+          "contactInfo": {
+            "email": null,
+            "phone": "+1 (203) 710-9065",
+            "address": null
+          },
+          "ssn": null,
+          "lease": {
+            "propertyId": "wood-1",
+            "unitId": "1B",
+            "tenantId": "tenant-2",
+            "startDate": "2024-07-01",
+            "endDate": "2025-06-30",
+            "rentAmount": 2475.0,
+            "securityDeposit": 4850.0,
+            "dueDate": 1,
+            "documents": null
+          },
+          "documents": null
+        },
+        "photos": [],
+        "documents": []
       }
     ],
     "documents": [
@@ -63,4 +110,4 @@
       }
     ]
   }
-} 
+}

@@ -26,6 +26,56 @@ class DataManager:
         """Initialize Property object from JSON data"""
         return Property.from_dict(self.data['property'])
 
+    def update_property(self, property_data: Dict[str, Any]) -> bool:
+        """Update property information"""
+        try:
+            # Update property fields
+            for key, value in property_data.items():
+                if key == 'address':
+                    # Handle address update
+                    if isinstance(value, dict):
+                        self.property.address = Address.from_dict(value)
+                    else:
+                        print("Invalid address format")
+                        return False
+                else:
+                    setattr(self.property, key, value)
+
+            # Update JSON data
+            self._save_data()
+            return True
+
+        except Exception as e:
+            print(f"Error updating property: {str(e)}")
+            return False
+
+    def update_owner(self, owner_data: Dict[str, Any]) -> bool:
+        """Update owner information"""
+        try:
+            # Update owner fields
+            for key, value in owner_data.items():
+                if key == 'contactInfo':
+                    # Handle contact info update
+                    if isinstance(value, dict):
+                        if hasattr(self.property.owner.contactInfo, 'address') and 'address' in value:
+                            # Handle nested address update
+                            value['address'] = Address.from_dict(value['address'])
+                        for contact_key, contact_value in value.items():
+                            setattr(self.property.owner.contactInfo, contact_key, contact_value)
+                    else:
+                        print("Invalid contactInfo format")
+                        return False
+                else:
+                    setattr(self.property.owner, key, value)
+
+            # Update JSON data
+            self._save_data()
+            return True
+
+        except Exception as e:
+            print(f"Error updating owner: {str(e)}")
+            return False
+
     def update_tenant(self, unit_number: str, tenant_data: Dict[str, Any]) -> bool:
         """Update tenant information"""
         try:
@@ -128,24 +178,32 @@ class DataManager:
             return False
 
     def update_unit(self, unit_number: str, unit_data: Dict[str, Any]) -> bool:
-        """Update unit information"""
+        """Update unit information or create a new unit"""
         try:
-            # Find the unit
+            # Find the unit or create a new one
             unit = next((u for u in self.property.units if u.unitNumber == unit_number), None)
             if not unit:
-                print(f"Unit {unit_number} not found")
-                return False
-
-            # Update unit data
-            for key, value in unit_data.items():
-                if key == 'photos':
-                    # Handle photos update
-                    if not unit.photos:
-                        unit.photos = []
-                    for photo_data in value:
-                        unit.photos.append(Photo.from_dict(photo_data))
-                else:
-                    setattr(unit, key, value)
+                # Create new unit
+                if not self.property.units:
+                    self.property.units = []
+                unit_data['unitNumber'] = unit_number  # Ensure unit number is set
+                new_unit = Unit.from_dict(unit_data)
+                self.property.units.append(new_unit)
+            else:
+                # Update existing unit
+                for key, value in unit_data.items():
+                    if key == 'photos':
+                        # Handle photos update
+                        if not unit.photos:
+                            unit.photos = []
+                        for photo_data in value:
+                            unit.photos.append(Photo.from_dict(photo_data))
+                    elif key == 'currentTenant':
+                        # Handle tenant update
+                        if isinstance(value, dict):
+                            unit.currentTenant = Tenant.from_dict(value)
+                    else:
+                        setattr(unit, key, value)
 
             # Update JSON data
             self._save_data()
