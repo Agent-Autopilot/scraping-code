@@ -37,7 +37,7 @@ def setup_property():
         "Add tenant Priscilla to unit Woodbridge Unit B",
         "Set lease for Woodbridge Unit B starting May 7 2024 ending April 30 2025 with rent $2,650 and security deposit $5,032"
     ]
-    
+
     # Process each update
     for update in updates:
         print(f"\nProcessing: {update}")

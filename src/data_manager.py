@@ -55,8 +55,10 @@ class DataManager:
             print(f"Error saving data: {str(e)}")
 
     def _initialize_property(self) -> Property:
-        """Initialize Property object from JSON data."""
-        return Property.from_dict(self.data.get('property', {}))
+        """Initialize property from schema or create a new one."""
+        if 'property' in self.data:
+            return Property.from_dict(self.data['property'])
+        return Property(name="New Property")
 
     def _get_unit(self, unit_number: str) -> Optional[Unit]:
         """Get unit by number or return None."""
@@ -90,6 +92,14 @@ class DataManager:
     def update_property(self, property_data: Dict[str, Any]) -> bool:
         """Update property information."""
         try:
+            # Create address if it doesn't exist
+            if 'address' in property_data and not self.property.address:
+                self.property.address = Address()
+                
+            # Create owner if it doesn't exist
+            if 'owner' in property_data and not self.property.owner:
+                self.property.owner = Entity(name="Owner")
+                
             self._update_entity(self.property, property_data)
             self._save_data()
             return True
@@ -100,6 +110,18 @@ class DataManager:
     def update_owner(self, owner_data: Dict[str, Any]) -> bool:
         """Update owner information."""
         try:
+            # Create owner if it doesn't exist
+            if not self.property.owner:
+                self.property.owner = Entity(name="Owner")
+                
+            # Create contact info if it doesn't exist
+            if 'contactInfo' in owner_data and not self.property.owner.contactInfo:
+                self.property.owner.contactInfo = ContactInfo()
+                
+            # Create address if it doesn't exist
+            if 'address' in owner_data.get('contactInfo', {}) and not self.property.owner.contactInfo.address:
+                self.property.owner.contactInfo.address = Address()
+                
             self._update_entity(self.property.owner, owner_data)
             self._save_data()
             return True
@@ -108,25 +130,17 @@ class DataManager:
             return False
 
     def update_unit(self, unit_number: str, unit_data: Dict[str, Any]) -> bool:
-        """Update or create a unit."""
+        """Update unit information."""
         try:
             unit = self._get_unit(unit_number)
             if not unit:
+                # Create new unit if it doesn't exist
                 if not self.property.units:
                     self.property.units = []
-                unit_data['unitNumber'] = unit_number
-                unit_data['propertyId'] = self.property.name  # Set propertyId to property name
-                self.property.units.append(Unit.from_dict(unit_data))
-            else:
-                def handle_photos(photos):
-                    if not unit.photos:
-                        unit.photos = []
-                    for photo_data in photos:
-                        unit.photos.append(Photo.from_dict(photo_data))
-
-                special_handlers = {'photos': handle_photos}
-                self._update_entity(unit, unit_data, special_handlers)
-
+                unit = Unit(unitNumber=unit_number, propertyId=self.property.name)
+                self.property.units.append(unit)
+                
+            self._update_entity(unit, unit_data)
             self._save_data()
             return True
         except Exception as e:
@@ -138,17 +152,31 @@ class DataManager:
         try:
             unit = self._get_unit(unit_number)
             if not unit:
-                print(f"Unit {unit_number} not found")
+                # Create unit if it doesn't exist
+                if not self.property.units:
+                    self.property.units = []
+                unit = Unit(unitNumber=unit_number, propertyId=self.property.name)
+                self.property.units.append(unit)
+                
+            # Get tenant name from data
+            tenant_name = tenant_data.get('name')
+            if not tenant_name:
+                print("Tenant name is required")
                 return False
-
+                
+            # Create tenant if it doesn't exist
             if not unit.currentTenant:
-                # Ensure contactInfo exists
-                if 'contactInfo' not in tenant_data:
-                    tenant_data['contactInfo'] = {}
-                unit.currentTenant = Tenant.from_dict(tenant_data)
-            else:
-                self._update_entity(unit.currentTenant, tenant_data)
-
+                unit.currentTenant = Tenant(name=tenant_name)
+                
+            # Create contact info if it doesn't exist
+            if 'contactInfo' in tenant_data and not unit.currentTenant.contactInfo:
+                unit.currentTenant.contactInfo = ContactInfo()
+                
+            # Create address if it doesn't exist
+            if 'address' in tenant_data.get('contactInfo', {}) and not unit.currentTenant.contactInfo.address:
+                unit.currentTenant.contactInfo.address = Address()
+                
+            self._update_entity(unit.currentTenant, tenant_data)
             self._save_data()
             return True
         except Exception as e:
@@ -159,38 +187,42 @@ class DataManager:
         """Update lease information for a specific unit."""
         try:
             unit = self._get_unit(unit_number)
-            if not unit or not unit.currentTenant:
-                print(f"No tenant in unit {unit_number}")
-                return False
-
+            if not unit:
+                # Create unit if it doesn't exist
+                if not self.property.units:
+                    self.property.units = []
+                unit = Unit(unitNumber=unit_number, propertyId=self.property.name)
+                self.property.units.append(unit)
+                
+            # Create tenant if it doesn't exist
+            if not unit.currentTenant:
+                # Try to get tenant name from lease data or use a default
+                tenant_name = lease_data.get('tenantId', f"Tenant_{unit_number}")
+                unit.currentTenant = Tenant(name=tenant_name)
+                
             # Set required IDs
             lease_data['propertyId'] = self.property.name
             lease_data['unitId'] = unit.unitNumber
             lease_data['tenantId'] = unit.currentTenant.name
 
-            # Convert numeric fields to float
+            # Convert numeric fields to float if present
             for field in ['rentAmount', 'securityDeposit', 'nextRentAmount']:
-                if field in lease_data:
+                if field in lease_data and lease_data[field] is not None:
                     lease_data[field] = float(lease_data[field])
 
             if not unit.currentTenant.lease:
-                # For new leases, ensure rentAmount is set
-                if 'rentAmount' not in lease_data:
-                    lease_data['rentAmount'] = 0.0
-                unit.currentTenant.lease = Lease.from_dict(lease_data)
-            else:
-                # For updates to existing lease
-                current_lease = unit.currentTenant.lease
-                if 'rentAmount' in lease_data:
-                    current_lease.rentAmount = lease_data['rentAmount']
-                if 'securityDeposit' in lease_data:
-                    current_lease.securityDeposit = lease_data['securityDeposit']
-                if 'nextRentAmount' in lease_data:
-                    current_lease.nextRentAmount = lease_data['nextRentAmount']
-                if 'startDate' in lease_data:
-                    current_lease.startDate = lease_data['startDate']
-                if 'endDate' in lease_data:
-                    current_lease.endDate = lease_data['endDate']
+                # Create new lease
+                unit.currentTenant.lease = Lease(
+                    propertyId=self.property.name,
+                    unitId=unit.unitNumber,
+                    tenantId=unit.currentTenant.name
+                )
+                
+            # Update lease fields
+            current_lease = unit.currentTenant.lease
+            for field, value in lease_data.items():
+                if hasattr(current_lease, field) and field not in ['propertyId', 'unitId', 'tenantId']:
+                    setattr(current_lease, field, value)
 
             self._save_data()
             return True

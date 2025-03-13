@@ -1,0 +1,67 @@
+1. Create a new property called The Roxbury Arms at 165-195 Mansion Rd, Cheshire, CT.
+2. Set the owner to Cheshire Community Partners LLC.
+3. Update the owner's email to dan.tantsyura@gmail.com and phone to 2033135627.
+4. Create unit 165 (2 Bed).
+5. Add tenant Sherry to unit 165.
+6. Set move-in date for unit 165 to 1994-11-01 and move-out date to 2023-03-31.
+7. Set security deposit for unit 165 to 650 and rent for March to 950.
+8. Create unit 167 (1 Bed).
+9. Add tenant Timothy Schulang to unit 167.
+10. Set move-in date for unit 167 to 2023-08-15 and move-out date to 2023-03-30.
+11. Set security deposit for unit 167 to 1200 and rent for March to 1200.
+12. Create unit 169 (1 Bed).
+13. Add tenant Michael Matazzaro to unit 169.
+14. Set move-in date for unit 169 to 2015-05-01.
+15. Set security deposit for unit 169 to 1650 and rent for March to 875.
+16. Create unit 171 (2 Bed).
+17. Add tenants Danielle Bissell and Andrew Tutsion to unit 171.
+18. Set move-in date for unit 171 to 2019-02-15.
+19. Set security deposit for unit 171 to 950 and rent for March to 950.
+20. Create unit 173 (2 Bed).
+21. Mark unit 173 as VACANT.
+22. Set move-in date for unit 173 to 2021-05-01.
+23. Set security deposit for unit 173 to 0 and rent for March to 600.
+24. Create unit 175 (1 Bed).
+25. Add tenant Jeffrey Thomas to unit 175.
+26. Set move-in date for unit 175 to 2023-12-01 and move-out date to 2025-03-28.
+27. Set security deposit for unit 175 to 1200 and rent for March to 1200.
+28. Create unit 177 (1 Bed).
+29. Add tenant Hedvika Page to unit 177.
+30. Set move-in date for unit 177 to 2019-03-01.
+31. Set security deposit for unit 177 to 700 and rent for March to 900.
+32. Create unit 179 (2 Bed).
+33. Add tenant Dan Lawler to unit 179.
+34. Set move-in date for unit 179 to 2015-10-09.
+35. Set security deposit for unit 179 to 950 and rent for March to 985.
+36. Create unit 181 (2 Bed).
+37. Add tenant JOE DEELEY to unit 181.
+38. Set move-in date for unit 181 to 2023-05-01.
+39. Set security deposit for unit 181 to 0 and rent for March to 1100.
+40. Create unit 183 (1 Bed).
+41. Add tenant Justin Restivo to unit 183.
+42. Set move-in date for unit 183 to 2024-05-01.
+43. Set security deposit for unit 183 to 1200 and rent for March to 1300.
+44. Create unit 185 (1 Bed).
+45. Add tenant Whitney Nadolny to unit 185.
+46. Set move-in date for unit 185 to 2011-09-21.
+47. Set security deposit for unit 185 to 750 and rent for March to 850.
+48. Create unit 187 (2 Bed).
+49. Add tenant Stephen Carlar to unit 187.
+50. Set move-in date for unit 187 to 2020-07-01.
+51. Set security deposit for unit 187 to 985 and rent for March to 985.
+52. Create unit 189 (2 Bed).
+53. Add tenants Erica DeFazio and Alicen Gilbert to unit 189.
+54. Set move-in date for unit 189 to 2023-08-15.
+55. Set security deposit for unit 189 to 1300 and rent for March to 1300.
+56. Create unit 191 (1 Bed).
+57. Add tenant Nikki Attenberg to unit 191.
+58. Set move-in date for unit 191 to 2018-04-01 and move-out date to 2023-03-15.
+59. Set security deposit for unit 191 to 0 and rent for March to 0.
+60. Create unit 193 (1 Bed).
+61. Add tenant Joseph Grzes to unit 193.
+62. Set move-in date for unit 193 to 2016-11-18 and move-out date to 2023-03-15.
+63. Set security deposit for unit 193 to 825 and rent for March to 1313.
+64. Create unit 195 (2 Bed).
+65. Add tenant Jamie Artkop to unit 195.
+66. Set move-in date for unit 195 to 2021-09-15.
+67. Set security deposit for unit 195 to 0 and rent for March to 1100.
