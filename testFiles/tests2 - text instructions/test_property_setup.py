@@ -7,18 +7,18 @@ from datetime import datetime
 from pathlib import Path
 
 # Add src directory to Python path
-src_path = str(Path(__file__).parent.parent / 'src')
-sys.path.append(src_path)
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root))
 
-from property_manager import PropertyManager
+from src.property_manager import PropertyManager
 
 def setup_property():
     """Set up test property with two units using natural language commands."""
     # Initialize with test schema path
-    schema_path = 'testFiles/test_schema2.json'
+    schema_path = 'testFiles/tests2 - text instructions/test_schema2.json'
     
     # Only delete the schema if we're starting from scratch
-    if not any(os.path.exists(p) for p in ['testFiles/test_schema2.json', 'testFiles/test_schema.json']):
+    if not any(os.path.exists(p) for p in ['testFiles/tests2 - text instructions/test_schema2.json', 'testFiles/tests1 - basics/test_schema.json']):
         if os.path.exists(schema_path):
             os.remove(schema_path)
     
@@ -100,7 +100,7 @@ def main():
     try:
         if setup_property():
             print("\nProperty setup completed successfully!")
-            print("Test schema saved to: testFiles/test_schema.json")
+            print("Test schema saved to: testFiles/tests2 - text instructions/test_schema2.json")
         else:
             print("\nProperty setup failed!")
     except AssertionError as e:

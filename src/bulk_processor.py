@@ -1,145 +1,263 @@
-"""Process text updates for property management system."""
+"""Process text updates for property management system.
+
+This module provides functions for processing multiple text updates at once
+and applying them to the property management system.
+"""
 
 import os
-from typing import List, Dict, Any
-from nlp_processor import UpdateProcessor
-from data_manager import DataManager
+from typing import List, Dict, Any, Tuple
+from src.text_to_instructions import TextToInstructions
+from src.data_manager import DataManager
+from src.utils import FileManager
 
-def process_text_updates(text: str) -> List[Dict[str, Any]]:
-    """Process text updates and return list of processed instructions.
+def process_text_updates(instructions: List[str], data_manager: DataManager) -> Dict[str, List[str]]:
+    """Process a list of text instructions and apply them to the data manager.
     
     Args:
-        text: Input text containing update instructions
+        instructions: List of natural language instructions to process
+        data_manager: DataManager instance to apply updates to
         
     Returns:
-        List of dictionaries containing processed update instructions
+        Dictionary with 'successful' and 'failed' lists of instructions
     """
-    processor = UpdateProcessor()
-    updates = []
-    
-    # Split text into individual updates using empty lines as separators
-    instructions = [instr.strip() for instr in text.split('\n\n') if instr.strip()]
+    results = {
+        'successful': [],
+        'failed': []
+    }
     
     for instruction in instructions:
         try:
-            update = processor.process_update(instruction)
-            if update:
-                updates.append(update)
-        except Exception as e:
-            print(f"Error processing instruction: {str(e)}")
-            continue
+            # Try to apply the instruction directly
+            success = apply_instruction(instruction, data_manager)
             
-    return updates
+            if success:
+                results['successful'].append(instruction)
+            else:
+                results['failed'].append(instruction)
+                
+        except Exception as e:
+            print(f"Error processing instruction '{instruction}': {str(e)}")
+            results['failed'].append(instruction)
+            
+    return results
 
-def apply_updates(updates: List[Dict[str, Any]], data_manager: DataManager) -> bool:
-    """Apply processed updates to the database.
+def apply_instruction(instruction: str, data_manager: DataManager) -> bool:
+    """Apply a single natural language instruction to the data manager.
     
     Args:
-        updates: List of update instructions to apply
-        data_manager: DataManager instance to apply updates
+        instruction: Natural language instruction to apply
+        data_manager: DataManager instance to apply the instruction to
         
     Returns:
-        bool: True if all updates were successful, False otherwise
+        bool: True if the instruction was applied successfully
     """
-    success = True
-    update_handlers = {
-        'property': lambda data: data_manager.update_property(data),
-        'owner': lambda data: data_manager.update_owner(data),
-        'tenant': lambda data: _handle_tenant_update(data_manager, data),
-        'lease': lambda data: _handle_lease_update(data_manager, data),
-        'document': lambda data: _handle_document_update(data_manager, data),
-        'unit': lambda data: _handle_unit_update(data_manager, data)
-    }
+    # This is a simplified implementation that tries to identify the type of update
+    # from the instruction text and apply it accordingly
     
-    for update in updates:
-        try:
-            update_type = update.get('type')
-            update_data = update.get('data', {})
-            
-            if not update_type or not update_data:
-                print("Invalid update format: missing type or data")
-                success = False
-                continue
-                
-            handler = update_handlers.get(update_type)
-            if handler:
-                if not handler(update_data):
-                    success = False
-            else:
-                print(f"Unsupported update type: {update_type}")
-                success = False
-                
-        except Exception as e:
-            print(f"Error applying update: {str(e)}")
-            success = False
-            
-    return success
-
-def _handle_tenant_update(data_manager: DataManager, data: Dict[str, Any]) -> bool:
-    """Handle tenant update with unit number validation."""
-    unit_number = data.pop('unitNumber', None)
-    if not unit_number:
-        print("Missing unit number for tenant update")
-        return False
-    return data_manager.update_tenant(unit_number, data)
-
-def _handle_lease_update(data_manager: DataManager, data: Dict[str, Any]) -> bool:
-    """Handle lease update with unit number validation."""
-    unit_number = data.pop('unitNumber', None)
-    if not unit_number:
-        print("Missing unit number for lease update")
-        return False
-    return data_manager.update_lease(unit_number, data)
-
-def _handle_document_update(data_manager: DataManager, data: Dict[str, Any]) -> bool:
-    """Handle document update with entity validation."""
-    entity_type = data.pop('entityType', None)
-    entity_id = data.pop('entityId', None)
-    if not entity_type or not entity_id:
-        print("Missing entity type or ID for document update")
-        return False
-    return data_manager.add_document(entity_type, entity_id, data)
-
-def _handle_unit_update(data_manager: DataManager, data: Dict[str, Any]) -> bool:
-    """Handle unit update with unit number validation."""
-    unit_number = data.pop('unitNumber', None)
-    if not unit_number:
-        print("Missing unit number for unit update")
-        return False
-    return data_manager.update_unit(unit_number, data)
-
-def main() -> bool:
-    """Main entry point for processing updates.
+    instruction_lower = instruction.lower()
     
-    Returns:
-        bool: True if all updates were successful, False otherwise
-    """
     try:
-        input_file = 'temp_input.txt'
-        if not os.path.exists(input_file):
-            print(f"Input file {input_file} not found")
-            return False
+        # Property updates
+        if "create a new property" in instruction_lower or "update property" in instruction_lower:
+            # Extract property details from the instruction
+            property_data = {}
             
-        with open(input_file, 'r') as f:
-            text = f.read().strip()
+            # Look for property name
+            if "called" in instruction_lower:
+                name_start = instruction.find("called") + 7
+                name_end = instruction.find("at", name_start)
+                if name_end == -1:
+                    name_end = len(instruction)
+                property_data["name"] = instruction[name_start:name_end].strip()
             
-        if not text:
-            print("No updates provided")
-            return False
+            # Look for address
+            if "at" in instruction_lower:
+                address_start = instruction.find("at") + 3
+                address = instruction[address_start:].strip()
+                
+                # Try to parse the address components
+                address_parts = address.split(",")
+                if len(address_parts) >= 2:
+                    property_data["address"] = {
+                        "street": address_parts[0].strip()
+                    }
+                    
+                    # Try to parse city, state, zip
+                    location_parts = address_parts[1].strip().split()
+                    if len(location_parts) >= 2:
+                        property_data["address"]["city"] = " ".join(location_parts[:-2])
+                        property_data["address"]["state"] = location_parts[-2]
+                        property_data["address"]["zip"] = location_parts[-1]
             
-        updates = process_text_updates(text)
-        if not updates:
-            print("No valid updates found")
-            return False
+            return data_manager.update_property(property_data)
             
-        data_manager = DataManager()
-        success = apply_updates(updates, data_manager)
-        print("All updates applied successfully" if success else "Some updates failed")
-        return success
+        # Owner updates
+        elif "owner" in instruction_lower:
+            owner_data = {}
             
+            # Look for owner name
+            if "to" in instruction_lower:
+                name_start = instruction.find("to") + 3
+                name_end = instruction.find(",", name_start)
+                if name_end == -1:
+                    name_end = len(instruction)
+                owner_data["name"] = instruction[name_start:name_end].strip()
+            
+            # Look for contact info
+            if "email" in instruction_lower:
+                email_start = instruction.find("email") + 6
+                email_end = instruction.find(" ", email_start)
+                if email_end == -1:
+                    email_end = len(instruction)
+                
+                if "contactInfo" not in owner_data:
+                    owner_data["contactInfo"] = {}
+                owner_data["contactInfo"]["email"] = instruction[email_start:email_end].strip()
+            
+            if "phone" in instruction_lower:
+                phone_start = instruction.find("phone") + 6
+                phone_end = instruction.find(" ", phone_start)
+                if phone_end == -1:
+                    phone_end = len(instruction)
+                
+                if "contactInfo" not in owner_data:
+                    owner_data["contactInfo"] = {}
+                owner_data["contactInfo"]["phone"] = instruction[phone_start:phone_end].strip()
+            
+            return data_manager.update_owner(owner_data)
+            
+        # Unit updates
+        elif "unit" in instruction_lower and not ("tenant" in instruction_lower or "lease" in instruction_lower):
+            # Extract unit number
+            unit_start = instruction.find("unit") + 5
+            unit_end = instruction.find(" ", unit_start)
+            if unit_end == -1:
+                unit_end = len(instruction)
+            unit_number = instruction[unit_start:unit_end].strip()
+            
+            unit_data = {}
+            
+            return data_manager.update_unit(unit_number, unit_data)
+            
+        # Tenant updates
+        elif "tenant" in instruction_lower:
+            # Extract unit number
+            unit_number = None
+            if "unit" in instruction_lower:
+                unit_start = instruction.find("unit") + 5
+                unit_end = instruction.find(" ", unit_start)
+                if unit_end == -1:
+                    unit_end = len(instruction)
+                unit_number = instruction[unit_start:unit_end].strip()
+            
+            # Extract tenant name
+            tenant_data = {}
+            if "named" in instruction_lower:
+                name_start = instruction.find("named") + 6
+                name_end = instruction.find(" to ", name_start)
+                if name_end == -1:
+                    name_end = len(instruction)
+                tenant_data["name"] = instruction[name_start:name_end].strip()
+            
+            if not unit_number:
+                return False
+                
+            return data_manager.update_tenant(unit_number, tenant_data)
+            
+        # Lease updates
+        elif "lease" in instruction_lower:
+            # Extract unit number
+            unit_number = None
+            if "unit" in instruction_lower:
+                unit_start = instruction.find("unit") + 5
+                unit_end = instruction.find(" ", unit_start)
+                if unit_end == -1:
+                    unit_end = len(instruction)
+                unit_number = instruction[unit_start:unit_end].strip()
+            
+            lease_data = {}
+            
+            # Look for rent amount
+            if "rent" in instruction_lower:
+                rent_start = instruction.find("rent") + 5
+                rent_end = instruction.find(" ", rent_start)
+                if rent_end == -1:
+                    rent_end = len(instruction)
+                
+                rent_str = instruction[rent_start:rent_end].strip()
+                if rent_str.startswith("$"):
+                    rent_str = rent_str[1:]
+                
+                try:
+                    lease_data["rentAmount"] = float(rent_str)
+                except ValueError:
+                    pass
+            
+            # Look for due date
+            if "due" in instruction_lower:
+                due_start = instruction.find("due") + 4
+                due_end = instruction.find(" ", due_start)
+                if due_end == -1:
+                    due_end = len(instruction)
+                
+                lease_data["dueDate"] = instruction[due_start:due_end].strip()
+            
+            if not unit_number:
+                return False
+                
+            return data_manager.update_lease(unit_number, lease_data)
+            
+        # If we can't determine the type, return False
+        return False
+        
     except Exception as e:
-        print(f"Error in main: {str(e)}")
+        print(f"Error applying instruction: {str(e)}")
         return False
 
-if __name__ == '__main__':
+def process_text_file(file_path: str, data_manager: DataManager) -> Tuple[List[str], List[str]]:
+    """Process a text file containing natural language instructions.
+    
+    Args:
+        file_path: Path to the text file
+        data_manager: DataManager instance to apply updates to
+        
+    Returns:
+        Tuple of (successful_instructions, failed_instructions)
+    """
+    # Load the text file
+    text = FileManager.load_text(file_path)
+    if not text:
+        print(f"Error: Could not load text from {file_path}")
+        return ([], [])
+    
+    # Convert text to instructions
+    converter = TextToInstructions()
+    instructions = converter.convert_text(text)
+    
+    # Process the instructions
+    results = process_text_updates(instructions, data_manager)
+    
+    return (results['successful'], results['failed'])
+
+def main():
+    """Example usage of the bulk processor."""
+    # Initialize data manager
+    data_manager = DataManager()
+    
+    # Example text file path
+    file_path = "input.txt"
+    
+    # Process the text file
+    successful, failed = process_text_file(file_path, data_manager)
+    
+    # Print results
+    print(f"Successfully processed {len(successful)} instructions")
+    print(f"Failed to process {len(failed)} instructions")
+    
+    if failed:
+        print("\nFailed instructions:")
+        for i, instruction in enumerate(failed, 1):
+            print(f"{i}. {instruction}")
+
+if __name__ == "__main__":
     main() 

@@ -7,17 +7,14 @@ property management system.
 
 import os
 from typing import List
-from openai import OpenAI
-from dotenv import load_dotenv
+from src.utils import GPTClient
 
 class TextToInstructions:
     """Convert unstructured text into property management instructions."""
     
     def __init__(self):
-        """Initialize the converter with OpenAI client."""
-        load_dotenv()
-        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.model = os.getenv('GPT_MODEL', 'gpt-4o-mini')
+        """Initialize the converter with GPT client."""
+        self.gpt_client = GPTClient()
 
     def convert_text(self, text: str) -> List[str]:
         """Convert unstructured text into a list of property management instructions.
@@ -68,23 +65,19 @@ Now, convert this text into property management instructions:
 
         try:
             print("\nSending text to OpenAI for conversion...")
-            print(f"Model: {self.model.split('#')[0].strip()}")
-            print(f"API Key: {self.client.api_key[:8]}...")
-            messages = [
-                {"role": "system", "content": "You are a property management system that converts unstructured text into clear instructions."},
-                {"role": "user", "content": prompt}
-            ]
-            print(f"Messages: {messages}")
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=0.1
-            )
+            print(f"Model: {self.gpt_client.model}")
+            
+            system_message = "You are a property management system that converts unstructured text into clear instructions."
+            
+            response = self.gpt_client.query(prompt, system_message)
+            
+            if not response:
+                return []
             
             # Split the response into individual instructions
             instructions = []
             print("\nGenerated instructions:")
-            for line in response.choices[0].message.content.strip().split('\n'):
+            for line in response.strip().split('\n'):
                 line = line.strip()
                 # Remove numbered prefixes like "1. ", "2. ", etc.
                 if line and not line.startswith('#'):

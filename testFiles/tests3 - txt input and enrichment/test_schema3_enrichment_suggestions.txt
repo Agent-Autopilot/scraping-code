@@ -1,0 +1,12 @@
+1. Update the owner's contact address zip code to "10960" as it is currently missing in the JSON data.
+2. Set the lease due date for unit 167 to the 15th of each month, as indicated in the original text data.
+3. Add the phone number "203-250-0285" for tenant Sherry in unit 165, as it is currently missing in the JSON data.
+4. Update the lease end date for unit 169 to "2023-04-30" to reflect the correct information from the original text data.
+5. Update the lease end date for unit 171 to "2023-05-31" as it is currently missing in the JSON data.
+6. Update the lease due date for unit 177 to the 15th of each month, as indicated in the original text data.
+7. Update the lease end date for unit 181 to "2023-05-31" as it is currently missing in the JSON data.
+8. Update the lease end date for unit 185 to "2023-05-31" as it is currently missing in the JSON data.
+9. Add the phone number "8607197451" for tenant Stephen Carlar in unit 187, as it is currently missing in the JSON data.
+10. Update the lease due date for unit 189 to the 15th of each month, as indicated in the original text data.
+11. Update the lease end date for unit 191 to "2023-03-15" as it is currently missing in the JSON data.
+12. Update the lease end date for unit 195 to "2023-04-30" as it is currently missing in the JSON data.

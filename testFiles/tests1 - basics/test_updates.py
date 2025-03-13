@@ -1,7 +1,14 @@
 import json
 import shutil
-from update_database import DataManager
-from update_processor import UpdateProcessor
+import sys
+from pathlib import Path
+
+# Add src directory to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root))
+
+from src.update_database import DataManager
+from src.update_processor import UpdateProcessor
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
@@ -53,11 +60,11 @@ Each instruction should be self-contained and unambiguous."""
 
 def backup_schema():
     """Create a backup of the schema file"""
-    shutil.copy('schema.json', 'schema.backup.json')
+    shutil.copy('testFiles/tests1 - basics/test_schema.json', 'testFiles/tests1 - basics/test_schema.backup.json')
 
 def restore_schema():
     """Restore the schema from backup"""
-    shutil.move('schema.backup.json', 'schema.json')
+    shutil.move('testFiles/tests1 - basics/test_schema.backup.json', 'testFiles/tests1 - basics/test_schema.json')
 
 def test_updates():
     """Test various update scenarios"""
@@ -66,7 +73,7 @@ def test_updates():
         backup_schema()
 
         # Initialize manager and processor
-        manager = DataManager()
+        manager = DataManager(schema_path='testFiles/tests1 - basics/test_schema.json')
         processor = UpdateProcessor()
 
         # Original test cases
@@ -80,7 +87,7 @@ def test_updates():
         ]
 
         # Preprocess test cases
-        with open('schema.json', 'r') as f:
+        with open('testFiles/tests1 - basics/test_schema.json', 'r') as f:
             schema = json.load(f)
         
         print("\nPreprocessing test cases...")
@@ -99,7 +106,7 @@ def test_updates():
 
             if success:
                 # Verify the changes were saved
-                with open('schema.json', 'r') as f:
+                with open('testFiles/tests1 - basics/test_schema.json', 'r') as f:
                     current_data = json.load(f)
                 print("Changes saved to schema.json")
 

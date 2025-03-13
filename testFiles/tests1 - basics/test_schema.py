@@ -1,5 +1,12 @@
 import json
-from models import (
+import sys
+from pathlib import Path
+
+# Add src directory to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root))
+
+from src.models import (
     Address,
     ContactInfo,
     Document,
@@ -12,21 +19,24 @@ from models import (
 )
 
 def test_schema():
-    # Load the JSON data
-    with open('schema.json', 'r') as f:
-        data = json.load(f)
-    
+    """Test loading and creating objects from JSON schema"""
     try:
-        # Create Property object
-        property_data = data['property']
+        # Load JSON data
+        json_path = 'testFiles/tests1 - basics/test_schema.json'
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        
+        property_data = data['properties'][0]
         
         # Create Address
         address = Address(**property_data['address'])
         print(f"✓ Created Address: {address}")
         
-        # Create Owner's ContactInfo and Entity
-        owner_contact = ContactInfo(**property_data['owner']['contactInfo'])
-        owner = Entity(**{**property_data['owner'], 'contactInfo': owner_contact})
+        # Create Owner Entity with ContactInfo
+        owner_data = property_data['owner']
+        owner_contact = ContactInfo(**owner_data['contactInfo'])
+        owner_data['contactInfo'] = owner_contact
+        owner = Entity(**owner_data)
         print(f"✓ Created Entity: {owner}")
         
         # Create Units with Tenants

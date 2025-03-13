@@ -6,9 +6,10 @@ the functionality of the data manager and NLP processor.
 
 import os
 from typing import Dict, Any, Optional, List
-from data_manager import DataManager
-from nlp_processor import UpdateProcessor
-from data_models import Property, Unit, Tenant, Lease, Document, Photo
+from src.data_manager import DataManager
+from src.nlp_processor import UpdateProcessor
+from src.data_models import Property, Unit, Tenant, Lease, Document, Photo
+from src.bulk_processor import process_text_updates
 
 class PropertyManager:
     """High-level interface for property management operations."""
@@ -34,156 +35,123 @@ class PropertyManager:
         Returns:
             bool: True if update was successful
         """
-        update = self.nlp_processor.process_update(text)
-        if not update:
+        # Get the analysis and instructions from the NLP processor
+        result = self.nlp_processor.process_update(text)
+        if not result:
             return False
             
-        update_type = update['type']
-        update_data = update['data']
+        # The new format returns analysis and instructions directly
+        instructions = result.get('instructions', [])
+        if not instructions:
+            print("No instructions generated from update")
+            return False
+            
+        # Process each instruction
+        # For simplicity, we'll consider the update successful if at least one instruction succeeds
+        success = False
+        for instruction in instructions:
+            # Process each instruction individually
+            if self.process_single_instruction(instruction):
+                success = True
+                
+        return success
+    
+    def process_single_instruction(self, instruction: str) -> bool:
+        """Process a single natural language instruction.
         
-        if update_type == 'property':
-            property_data = update_data.get('Property_data')
-            if not property_data:
-                print("Missing Property_data in update")
-                return False
-            return self.data_manager.update_property(property_data)
-        elif update_type == 'owner':
-            owner_data = update_data.get('Owner_data')
-            if not owner_data:
-                print("Missing Owner_data in update")
-                return False
-            return self.data_manager.update_owner(owner_data)
-        elif update_type == 'tenant':
-            unit_number = update_data.pop('unitNumber', None)
-            if not unit_number:
-                print("Missing unit number for tenant update")
-                return False
-            return self.data_manager.update_tenant(unit_number, update_data)
-        elif update_type == 'lease':
-            unit_number = update_data.pop('unitNumber', None)
-            if not unit_number:
-                print("Missing unit number for lease update")
-                return False
-            return self.data_manager.update_lease(unit_number, update_data)
-        elif update_type == 'unit':
-            unit_number = update_data.pop('unitNumber', None)
-            if not unit_number:
-                print("Missing unit number for unit update")
-                return False
-            return self.data_manager.update_unit(unit_number, update_data)
-        else:
-            print(f"Unsupported update type: {update_type}")
-            return False
+        This is a simplified version that just passes the instruction back to process_text_update
+        but could be expanded to handle different types of instructions directly.
+        
+        Args:
+            instruction: Natural language instruction
             
+        Returns:
+            bool: True if instruction was processed successfully
+        """
+        # Use the bulk processor to process the instruction
+        results = process_text_updates([instruction], self.data_manager)
+        return len(results['failed']) == 0
+        
     def get_property(self) -> Property:
-        """Get the current property data."""
-        return self.data_manager.property
+        """Get the property from the data manager."""
+        return self.data_manager.get_property()
         
     def get_units(self) -> List[Unit]:
-        """Get all units in the property."""
-        return self.data_manager.property.units or []
+        """Get all units from the data manager."""
+        return self.data_manager.get_units()
         
     def get_unit(self, unit_number: str) -> Optional[Unit]:
         """Get a specific unit by number."""
-        units = self.get_units()
-        return next((u for u in units if u.unitNumber == unit_number), None)
+        return self.data_manager.get_unit(unit_number)
         
     def get_tenant(self, unit_number: str) -> Optional[Tenant]:
-        """Get the tenant of a specific unit."""
-        unit = self.get_unit(unit_number)
-        return unit.currentTenant if unit else None
+        """Get the tenant for a specific unit."""
+        return self.data_manager.get_tenant(unit_number)
         
     def get_lease(self, unit_number: str) -> Optional[Lease]:
         """Get the lease for a specific unit."""
-        tenant = self.get_tenant(unit_number)
-        return tenant.lease if tenant else None
+        return self.data_manager.get_lease(unit_number)
         
     def add_document(self, entity_type: str, entity_id: str, 
                     doc_type: str, url: str, name: Optional[str] = None) -> bool:
-        """Add a document to a property or unit.
+        """Add a document to an entity.
         
         Args:
-            entity_type: 'property' or 'unit'
-            entity_id: Property name or unit number
-            doc_type: Type of document (e.g., 'lease', 'insurance')
-            url: URL to the document
-            name: Optional document name
+            entity_type: Type of entity ('property', 'owner', 'unit', 'tenant')
+            entity_id: ID of the entity (property name, owner name, unit number, tenant name)
+            doc_type: Type of document (e.g., 'lease', 'inspection', 'receipt')
+            url: URL or path to the document
+            name: Optional name for the document
             
         Returns:
             bool: True if document was added successfully
         """
-        doc_data = {
-            'id': f"{doc_type}-{len(self.get_all_documents()) + 1}",
-            'type': doc_type,
-            'url': url,
-            'name': name
-        }
-        return self.data_manager.add_document(entity_type, entity_id, doc_data)
+        return self.data_manager.add_document(entity_type, entity_id, doc_type, url, name)
         
     def get_all_documents(self) -> List[Document]:
-        """Get all documents in the property."""
-        docs = self.data_manager.property.documents or []
-        for unit in self.get_units():
-            if unit.documents:
-                docs.extend(unit.documents)
-        return docs
+        """Get all documents across all entities.
+        
+        Returns:
+            List of all documents
+        """
+        return self.data_manager.get_all_documents()
         
     def add_photo(self, unit_number: str, url: str, description: Optional[str] = None) -> bool:
         """Add a photo to a unit.
         
         Args:
-            unit_number: Unit identifier
-            url: URL to the photo
-            description: Optional photo description
+            unit_number: Unit number
+            url: URL or path to the photo
+            description: Optional description of the photo
             
         Returns:
             bool: True if photo was added successfully
         """
-        photo_data = {
-            'id': f"photo-{len(self.get_all_photos()) + 1}",
-            'url': url,
-            'description': description
-        }
-        unit_data = {'photos': [photo_data]}
-        return self.data_manager.update_unit(unit_number, unit_data)
+        return self.data_manager.add_photo(unit_number, url, description)
         
     def get_all_photos(self) -> List[Photo]:
-        """Get all photos in the property."""
-        photos = []
-        for unit in self.get_units():
-            if unit.photos:
-                photos.extend(unit.photos)
-        return photos
+        """Get all photos across all units.
+        
+        Returns:
+            List of all photos
+        """
+        return self.data_manager.get_all_photos()
 
 def main():
-    """Example usage of the PropertyManager."""
-    # Create a new property manager (will create schema.json if it doesn't exist)
+    """Example usage of the property manager."""
     manager = PropertyManager()
     
-    # Process some natural language updates
-    updates = [
-        "Create a new property called Sunset Apartments at 123 Main St, Boston, MA 02108",
-        "Add unit 101 with monthly rent of $2000",
-        "Add John Doe as tenant in unit 101 with email john@email.com",
-        "Upload lease document for unit 101 at https://example.com/lease.pdf"
-    ]
+    # Example: Process a natural language update
+    update = "Create a new property called Sample Property at 123 Main St, Sample City, ST 12345"
+    success = manager.process_text_update(update)
     
-    for update in updates:
-        print(f"\nProcessing: {update}")
-        success = manager.process_text_update(update)
-        print("Success!" if success else "Failed.")
-        
-    # Get some information
-    property = manager.get_property()
-    print(f"\nProperty: {property.name}")
-    
-    units = manager.get_units()
-    for unit in units:
-        print(f"\nUnit {unit.unitNumber}:")
-        if unit.currentTenant:
-            print(f"Tenant: {unit.currentTenant.name}")
-            if unit.currentTenant.lease:
-                print(f"Rent: ${unit.currentTenant.lease.rentAmount}")
+    if success:
+        print("Update successful!")
+        property_data = manager.get_property()
+        print(f"Property: {property_data.name}")
+        print(f"Address: {property_data.address.street}, {property_data.address.city}, {property_data.address.state} {property_data.address.zip}")
+    else:
+        print("Update failed.")
 
 if __name__ == "__main__":
     main() 
