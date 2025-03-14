@@ -305,3 +305,60 @@ Potential improvements for the system include:
 ## License
 
 MIT License
+
+## Code Structure
+
+The codebase is organized as follows:
+
+- `src/`: Contains the main source code
+  - `scripts/`: Contains standalone scripts that can be run independently
+    - `document_converter.py`: Converts documents to text and extracts relevant information
+    - `text_to_instructions.py`: Converts unstructured text into property management instructions
+    - `bulk_processor.py`: Processes multiple text updates at once
+  - `property_manager.py`: Main interface for the property management system
+  - `data_models.py`: Data models for the property management system
+  - `templates/`: Contains JSON templates for new schemas
+
+- `testFiles/`: Contains test files
+  - `mainTests.py`: Tests the standalone scripts and the property manager
+
+Each script in the `scripts/` directory is designed to be standalone and can be run independently. The `property_manager.py` file provides a high-level interface that uses these scripts to provide the full functionality of the property management system.
+
+### Running the Scripts
+
+The scripts can be run directly from the command line:
+
+```bash
+# Convert a document to text
+python src/scripts/document_converter.py <file_path> [output_file]
+
+# Convert text to instructions
+python src/scripts/text_to_instructions.py <input_text_or_file> [output_file]
+
+# Process text updates
+python src/scripts/bulk_processor.py <instructions_file> <schema_file>
+```
+
+### Using the Property Manager
+
+The `PropertyManager` class provides a high-level interface for the property management system:
+
+```python
+from src.property_manager import PropertyManager
+
+# Initialize the property manager
+manager = PropertyManager()
+
+# Process a natural language update
+update = "Create a new property called Sample Property at 123 Main St, Sample City, ST 12345"
+success = manager.process_text_update(update)
+
+# Get the property
+property_data = manager.get_property()
+print(f"Property: {property_data.name}")
+print(f"Address: {property_data.address}")
+
+# Convert a document to text
+text = manager.convert_document_to_text("path/to/document.pdf")
+print(text)
+```
