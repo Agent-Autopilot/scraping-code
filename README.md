@@ -1,364 +1,73 @@
 # Landlord Autopilot
 
-A property management system that helps landlords manage properties, units, tenants, and leases through natural language processing and automated data enrichment.
+Landlord Autopilot streamlines property management by automatically extracting and organizing information from your property documents. It eliminates manual data entry by processing leases, agreements, and records to create a comprehensive, centralized database of all your properties, units, tenants, and leases.
 
 ## Features
 
-- **Property Management**: Create and manage properties, units, tenants, and leases
-- **Natural Language Processing**: Convert unstructured text into property management instructions
-- **Data Enrichment**: Identify and fill in missing information in property data
-- **Error Detection**: Find and correct inconsistencies and errors in property data
-- **Flexible Data Models**: Handle partial information with optional fields
-- **Document Conversion**: Convert various document formats (PDF, DOCX, etc.) to plaintext and extract relevant information
-
-## Components
-
-### Property Manager (`src/property_manager.py`)
-
-The core component that manages properties, units, tenants, and leases. It provides methods to:
-- Create and update properties
-- Add and update units
-- Add and update tenants
-- Manage leases
-- Process natural language updates
-
-### Data Manager (`src/data_manager.py`)
-
-Handles data persistence and updates, including:
-- Loading and saving property schemas
-- Updating property information
-- Managing units, tenants, and leases
-- Creating entities if they don't exist
-
-### NLP Processor (`src/nlp_processor.py`)
-
-Processes natural language updates using OpenAI's language models to convert them into structured property management instructions.
-
-### Text to Instructions (`src/text_to_instructions.py`)
-
-Converts unstructured text about properties into structured property management instructions using OpenAI's language models.
-
-### Data Enricher (`src/data_enricher.py`)
-
-Analyzes existing property data and original text data to identify and fill in missing information, such as:
-- Missing address components (e.g., zip codes)
-- Missing contact information (e.g., phone numbers, emails)
-- Missing lease details (e.g., due dates)
-- Inconsistencies between text data and structured data
-- Errors in the data that need correction
-
-### Document Converter (`src/document_converter.py`)
-
-Converts various document formats to plaintext and extracts relevant information based on data models:
-- Supports PDF, DOCX, DOC, and other formats
-- Extracts text from documents using appropriate libraries
-- Uses AI to identify and extract only the information relevant to the data models
-- Returns the extracted information as a string
-
-### Utilities (`src/utils.py`)
-
-Provides common utility functions and classes used throughout the system:
-- `GPTClient`: A wrapper for OpenAI API with retry logic and error handling
-- `FileManager`: Handles file operations for loading and saving data
-- Helper functions for data conversion and entity creation
-
-## Code Organization
-
-### Source Code (`src/`)
-
-1. `data_models.py`
-   - Contains data classes for the property management system
-   - Includes models for Address, ContactInfo, Document, Photo, etc.
-   - Uses dataclasses and dataclasses_json for serialization
-   - All fields except IDs are optional to handle partial information
-
-2. `bulk_processor.py`
-   - Handles bulk processing of text updates
-   - Coordinates between NLP Processor and Data Manager
-   - Provides functions for processing multiple instructions at once
-
-3. `data_manager.py`
-   - Manages data persistence and updates
-   - Handles CRUD operations for properties, units, tenants, etc.
-   - Maintains schema integrity
-   - Creates entities if they don't exist
-
-4. `nlp_processor.py`
-   - Processes natural language updates using OpenAI's language models
-   - Converts text input into structured instructions
-   - Validates and formats updates
-
-5. `property_manager.py`
-   - High-level interface for property management operations
-   - Combines functionality of data manager and NLP processor
-   - Provides methods for managing properties, units, tenants, and leases
-
-6. `text_to_instructions.py`
-   - Converts unstructured text about properties into structured instructions
-   - Uses OpenAI's language models to generate clear, line-by-line instructions
-   - Formats dates, phone numbers, and currency values consistently
-
-7. `data_enricher.py`
-   - Analyzes existing property data and original text data
-   - Identifies and fills in missing information
-   - Generates instructions to correct inconsistencies and errors
-
-8. `document_converter.py`
-   - Converts various document formats to plaintext
-   - Extracts relevant information based on data models
-   - Uses AI to identify important information in documents
-   - Handles errors gracefully with detailed logging
-
-9. `utils.py`
-   - Provides common utility functions and classes used throughout the system
-   - `GPTClient`: A wrapper for OpenAI API with retry logic and error handling
-   - `FileManager`: Handles file operations for loading and saving data
-   - Helper functions for data conversion and entity creation
-
-## Data Flow
-
-1. User provides natural language updates
-2. NLP Processor converts text to structured instructions
-3. Property Manager processes instructions and routes updates
-4. Data Manager applies changes to the database
-5. Changes are persisted to schema.json
-
-## Update Types
-
-The system supports the following update types:
-- Property updates (name, address, etc.)
-- Owner updates (contact info, documents)
-- Tenant updates (personal info, lease)
-- Lease updates (dates, amounts, due dates)
-- Document updates (new/modify documents)
-- Unit updates (photos, current tenant)
-
-## Usage
-
-### Data Enrichment
-
-To enrich property data:
-
-```python
-from src.data_enricher import DataEnricher
-
-# Initialize the data enricher
-enricher = DataEnricher()
-
-# Enrich data
-enricher.enrich_data('path/to/schema.json', 'path/to/text_data.txt')
-```
-
-The data enricher will:
-1. Analyze the JSON schema and text data
-2. Identify missing or incomplete information
-3. Generate instructions to fill in the missing data
-4. Apply the instructions to update the JSON schema
-5. Save the results for review
-
-### Text to Instructions
-
-To convert unstructured text into property management instructions:
-
-```python
-from src.text_to_instructions import TextToInstructions
-
-# Initialize the converter
-converter = TextToInstructions()
-
-# Convert text to instructions
-text = "Property at 123 Main St with tenant John Smith paying $1200 rent due on the 15th"
-instructions = converter.convert_text(text)
-
-# Process each instruction
-for instruction in instructions:
-    print(instruction)
-```
-
-### Document Conversion
-
-To convert documents and extract relevant information:
-
-```python
-from src.document_converter import convert_document_to_relevant_text
-
-# Convert a document and extract relevant information
-try:
-    result = convert_document_to_relevant_text("path/to/your/document.pdf")
-    print(result)
-except ValueError as e:
-    print(f"Error: {str(e)}")
-```
-
-You can also use the included test script:
-
-```bash
-python "testFiles/tests4 - document conversion/test_document_converter.py" "path/to/your/document.pdf"
-```
-
-Or with output to a file:
-
-```bash
-python "testFiles/tests4 - document conversion/test_document_converter.py" "path/to/your/document.pdf" --output "result.txt"
-```
-
-### Best Practices and Limitations
-
-When using the data enricher, be aware of the following:
-
-1. **Review Suggestions**: Always review the generated suggestions before applying them, as the AI might make incorrect inferences.
-
-2. **Check for Hallucinations**: The AI might generate information not present in the source data (e.g., assigning "last day of each month" as due dates without evidence).
-
-3. **Verify Cross-Entity Inferences**: Be cautious of suggestions that apply information from one entity to another (e.g., using owner's zip code for property address).
-
-4. **Examine Failed Instructions**: Review the failed instructions file to understand what couldn't be processed.
-
-5. **Backup Data**: Always keep a backup of your data before enrichment, which the system automatically creates.
-
-## Environment Variables
-
-The system uses the following environment variables:
-- `OPENAI_API_KEY`: Required for API access to OpenAI
-- `GPT_MODEL`: The model to use for NLP processing (defaults to gpt-4o-mini)
-
-## Test Scripts
-
-- `testFiles/tests1 - basics/test_schema.py`: Tests loading and creating objects from JSON schema
-- `testFiles/tests1 - basics/test_updates.py`: Tests various update scenarios
-- `testFiles/tests2 - text instructions/test_property_setup.py`: Sets up a property management system with a duplex property
-- `testFiles/tests3 - txt input and enrichment/test_text_to_instructions.py`: Tests converting unstructured text to property management instructions
-- `testFiles/tests3 - txt input and enrichment/test_data_enricher.py`: Tests the data enrichment functionality
-- `testFiles/tests4 - document conversion/test_document_converter.py`: Tests converting documents to plaintext and extracting relevant information
-
-## Requirements
-
-- Python 3.8+
-- OpenAI API key (set in `.env` file)
-- Required packages (see `requirements.txt`)
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/landlord-autopilot.git
-cd landlord-autopilot
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env and add your OpenAI API key
-```
-
-## Project Structure
-
-```
-landlord-autopilot/
-├── src/                    # Source code directory
-│   ├── data_models.py     # Data classes and models
-│   ├── bulk_processor.py  # Bulk update processing
-│   ├── data_manager.py    # Data persistence and CRUD
-│   ├── nlp_processor.py   # Natural language processing
-│   ├── property_manager.py # High-level property management interface
-│   ├── text_to_instructions.py # Text to instructions conversion
-│   ├── data_enricher.py   # Data enrichment functionality
-│   ├── document_converter.py # Document conversion functionality
-│   ├── utils.py           # Utility functions and classes
-│   └── templates/         # Template files for new schemas
-├── testFiles/             # Test files and scripts
-│   ├── tests1 - basics/   # Basic functionality tests
-│   ├── tests2 - text instructions/ # Text instruction tests
-│   ├── tests3 - txt input and enrichment/ # Data enrichment tests
-│   ├── tests4 - document conversion/ # Document conversion tests
-│   └── oldTests/          # Archive of previous test versions
-├── docs/                  # Documentation directory
-├── requirements.txt      # Python dependencies
-├── .env                  # Environment variables (not in version control)
-└── schema.json           # Property management schema
-```
-
-## Future Improvements
-
-Potential improvements for the system include:
-
-1. **Enhanced Validation**: Add more robust validation to prevent incorrect inferences
-2. **Confidence Scoring**: Implement confidence scores for enrichment suggestions
-3. **User Interface**: Create a web interface for reviewing and approving suggestions
-4. **Scheduled Enrichment**: Set up periodic data enrichment to keep information up-to-date
-5. **Multi-Source Enrichment**: Incorporate external data sources for validation
-6. **Improved Error Handling**: Enhance error handling and recovery mechanisms
-7. **Testing Framework**: Develop comprehensive unit and integration tests
-8. **Documentation**: Create detailed API documentation and usage examples
-
-## License
-
-MIT License
+- **Centralized Information Storage**: Consolidate data from all your property documents into a single, organized file
+- **Effortless Document Processing**: Upload leases, agreements, and property records without manual data entry
+- **Automatic Information Extraction**: System identifies and extracts key details from your documents
+- **Smart Data Enrichment**: Automatically fills in missing information based on context
+- **Multi-Document Support**: Process information from various sources to build a complete property profile
 
 ## Code Structure
 
-The codebase is organized as follows:
+### Source Files (`src/`)
 
-- `src/`: Contains the main source code
-  - `scripts/`: Contains standalone scripts that can be run independently
-    - `document_converter.py`: Converts documents to text and extracts relevant information
-    - `text_to_instructions.py`: Converts unstructured text into property management instructions
-    - `bulk_processor.py`: Processes multiple text updates at once
-  - `property_manager.py`: Main interface for the property management system
-  - `data_models.py`: Data models for the property management system
-  - `templates/`: Contains JSON templates for new schemas
+- **`property_processor.py`**: Main interface that orchestrates the entire document processing pipeline
+  - Handles document intake from various formats (PDF, DOCX, TXT)
+  - Coordinates text extraction, instruction generation, and JSON updates
+  - Manages the enrichment process to fill information gaps
+  - Provides both object-oriented and functional interfaces for flexibility
+  - Maintains state between multiple document processing operations
 
-- `testFiles/`: Contains test files
-  - `mainTests.py`: Tests the standalone scripts and the property manager
+- **`data_models.py`**: Comprehensive data structures for property management entities
+  - Defines hierarchical relationships between properties, units, tenants, and leases
+  - Implements JSON serialization/deserialization for persistent storage
+  - Provides optional fields throughout to handle partial information
+  - Uses type hints for better code reliability and IDE support
+  - Structures data to mirror real-world property management relationships
 
-Each script in the `scripts/` directory is designed to be standalone and can be run independently. The `property_manager.py` file provides a high-level interface that uses these scripts to provide the full functionality of the property management system.
+### Scripts (`src/scripts/`)
 
-### Running the Scripts
+- **`data_manager.py`**: Core data manipulation engine
+  - Processes structured instructions to update JSON data
+  - Handles entity creation, updates, and relationship management
+  - Maintains data integrity during updates
+  - Tracks failed instructions for debugging
+  - Implements intelligent merging of new and existing data
 
-The scripts can be run directly from the command line:
+- **`nlp_processor.py`**: Natural language understanding component
+  - Analyzes document text to determine intent and extract entities
+  - Transforms unstructured text into actionable instructions
+  - Uses OpenAI's language models with specialized prompts
+  - Handles ambiguity in natural language descriptions
+  - Normalizes dates, currency values, and contact information
 
-```bash
-# Convert a document to text
-python src/scripts/document_converter.py <file_path> [output_file]
+- **`text_to_instructions.py`**: Specialized text processing module
+  - Converts property-specific language into structured instructions
+  - Breaks complex updates into atomic operations
+  - Standardizes formatting for consistency
+  - Prioritizes instructions based on dependencies
+  - Handles edge cases in property descriptions
 
-# Convert text to instructions
-python src/scripts/text_to_instructions.py <input_text_or_file> [output_file]
+- **`data_enricher.py`**: Intelligent data completion system
+  - Analyzes existing data to identify information gaps
+  - Generates suggestions for missing fields based on context
+  - Cross-references information across entities
+  - Provides confidence levels for suggested enrichments
+  - Returns enrichment instructions without modifying data directly
 
-# Process text updates
-python src/scripts/bulk_processor.py <instructions_file> <schema_file>
-```
+- **`document_converter.py`**: Multi-format document processing
+  - Extracts text from PDF, DOCX, and plain text files
+  - Filters irrelevant content to focus on property information
+  - Preserves important structural elements from documents
+  - Handles document encoding and formatting issues
+  - Uses AI to identify the most relevant sections of documents
 
-### Using the Property Manager
-
-The `PropertyManager` class provides a high-level interface for the property management system:
-
-```python
-from src.property_manager import PropertyManager
-
-# Initialize the property manager
-manager = PropertyManager()
-
-# Process a natural language update
-update = "Create a new property called Sample Property at 123 Main St, Sample City, ST 12345"
-success = manager.process_text_update(update)
-
-# Get the property
-property_data = manager.get_property()
-print(f"Property: {property_data.name}")
-print(f"Address: {property_data.address}")
-
-# Convert a document to text
-text = manager.convert_document_to_text("path/to/document.pdf")
-print(text)
-```
+- **`utils.py`**: Shared utility functions and helper classes
+  - `GPTClient`: Robust OpenAI API wrapper with error handling and retries
+  - `FileManager`: Comprehensive file operations for JSON and text
+  - Data conversion utilities for various property management formats
+  - Logging configuration and standardized error handling
+  - Helper functions for data model descriptions and validation
