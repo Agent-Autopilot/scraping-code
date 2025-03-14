@@ -1,0 +1,9 @@
+1. Create a new property called Woodbridge Community Partners at 10 Miles Ave, Woodbridge, APTA, State of Connecticut, ZIP
+2. Create unit [UNIT_NUMBER] (unit number not provided, please specify)
+3. Add tenant John Cain to unit [UNIT_NUMBER]
+4. Update the owner's email to Vadim.Tantsyura@outlook.com
+5. Set lease for unit [UNIT_NUMBER] with rent 2425 and security deposit 4850
+6. Set lease start date to 2024-07-01
+7. Set lease end date to 2025-06-30
+8. Set lease due date to 1st day of each calendar month
+9. Add document Lease with name DocuSign Envelope to property

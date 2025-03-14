@@ -1,0 +1,15 @@
+Document ID: 2F592DF4-AE0E-4A95-AE38-0799BA7A596D
+Document Type: Lease
+Document Name: DocuSign Envelope
+
+Property Name: Woodbridge Community Partners
+Address: 10 Miles Ave, Woodbridge, APTA, State of Connecticut, ZIP
+
+Lease Start Date: July 1, 2024
+Lease End Date: June 31, 2025
+Rent Amount: $2425.00 per month
+Security Deposit: $4850.00
+Due Date: 1st day of each calendar month
+
+Tenant Name: John Cain
+Email: Vadim.Tantsyura@outlook.com

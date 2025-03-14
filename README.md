@@ -9,6 +9,7 @@ A property management system that helps landlords manage properties, units, tena
 - **Data Enrichment**: Identify and fill in missing information in property data
 - **Error Detection**: Find and correct inconsistencies and errors in property data
 - **Flexible Data Models**: Handle partial information with optional fields
+- **Document Conversion**: Convert various document formats (PDF, DOCX, etc.) to plaintext and extract relevant information
 
 ## Components
 
@@ -45,6 +46,14 @@ Analyzes existing property data and original text data to identify and fill in m
 - Missing lease details (e.g., due dates)
 - Inconsistencies between text data and structured data
 - Errors in the data that need correction
+
+### Document Converter (`src/document_converter.py`)
+
+Converts various document formats to plaintext and extracts relevant information based on data models:
+- Supports PDF, DOCX, DOC, and other formats
+- Extracts text from documents using appropriate libraries
+- Uses AI to identify and extract only the information relevant to the data models
+- Returns the extracted information as a string
 
 ### Utilities (`src/utils.py`)
 
@@ -94,7 +103,13 @@ Provides common utility functions and classes used throughout the system:
    - Identifies and fills in missing information
    - Generates instructions to correct inconsistencies and errors
 
-8. `utils.py`
+8. `document_converter.py`
+   - Converts various document formats to plaintext
+   - Extracts relevant information based on data models
+   - Uses AI to identify important information in documents
+   - Handles errors gracefully with detailed logging
+
+9. `utils.py`
    - Provides common utility functions and classes used throughout the system
    - `GPTClient`: A wrapper for OpenAI API with retry logic and error handling
    - `FileManager`: Handles file operations for loading and saving data
@@ -160,6 +175,33 @@ for instruction in instructions:
     print(instruction)
 ```
 
+### Document Conversion
+
+To convert documents and extract relevant information:
+
+```python
+from src.document_converter import convert_document_to_relevant_text
+
+# Convert a document and extract relevant information
+try:
+    result = convert_document_to_relevant_text("path/to/your/document.pdf")
+    print(result)
+except ValueError as e:
+    print(f"Error: {str(e)}")
+```
+
+You can also use the included test script:
+
+```bash
+python "testFiles/tests4 - document conversion/test_document_converter.py" "path/to/your/document.pdf"
+```
+
+Or with output to a file:
+
+```bash
+python "testFiles/tests4 - document conversion/test_document_converter.py" "path/to/your/document.pdf" --output "result.txt"
+```
+
 ### Best Practices and Limitations
 
 When using the data enricher, be aware of the following:
@@ -187,6 +229,7 @@ The system uses the following environment variables:
 - `testFiles/tests2 - text instructions/test_property_setup.py`: Sets up a property management system with a duplex property
 - `testFiles/tests3 - txt input and enrichment/test_text_to_instructions.py`: Tests converting unstructured text to property management instructions
 - `testFiles/tests3 - txt input and enrichment/test_data_enricher.py`: Tests the data enrichment functionality
+- `testFiles/tests4 - document conversion/test_document_converter.py`: Tests converting documents to plaintext and extracting relevant information
 
 ## Requirements
 
@@ -231,12 +274,14 @@ landlord-autopilot/
 │   ├── property_manager.py # High-level property management interface
 │   ├── text_to_instructions.py # Text to instructions conversion
 │   ├── data_enricher.py   # Data enrichment functionality
+│   ├── document_converter.py # Document conversion functionality
 │   ├── utils.py           # Utility functions and classes
 │   └── templates/         # Template files for new schemas
 ├── testFiles/             # Test files and scripts
 │   ├── tests1 - basics/   # Basic functionality tests
 │   ├── tests2 - text instructions/ # Text instruction tests
 │   ├── tests3 - txt input and enrichment/ # Data enrichment tests
+│   ├── tests4 - document conversion/ # Document conversion tests
 │   └── oldTests/          # Archive of previous test versions
 ├── docs/                  # Documentation directory
 ├── requirements.txt      # Python dependencies

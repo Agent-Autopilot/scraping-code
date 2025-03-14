@@ -1,0 +1,39 @@
+{
+  "property": {
+    "name": "Woodbridge Community Partners",
+    "address": {
+      "street": "a new property called Woodbridge Community Partners at 10 Miles Ave",
+      "city": "LLC at 10",
+      "state": "Miles",
+      "zip": "Ave"
+    },
+    "owner": {
+      "name": "Vadim.Tantsyura@outlook.com",
+      "type": "",
+      "contactInfo": {
+        "email": "to",
+        "phone": "",
+        "address": null
+      },
+      "taxId": null,
+      "documents": []
+    },
+    "units": [
+      {
+        "unitNumber": "[UNIT_NUMBER]",
+        "propertyId": "Woodbridge Community Partners",
+        "currentTenant": null,
+        "photos": null,
+        "documents": null
+      },
+      {
+        "unitNumber": "A",
+        "propertyId": "Woodbridge Community Partners",
+        "currentTenant": null,
+        "photos": null,
+        "documents": null
+      }
+    ],
+    "documents": []
+  }
+}

@@ -7,7 +7,13 @@ property management system.
 
 import os
 from typing import List
+
 from src.utils import GPTClient
+from src.data_models import (
+    Address, ContactInfo, Document, Photo, Lease, 
+    Tenant, Unit, Entity, Property
+)
+import dataclasses
 
 class TextToInstructions:
     """Convert unstructured text into property management instructions."""
@@ -25,6 +31,24 @@ class TextToInstructions:
         Returns:
             List of natural language instructions for the property management system
         """
+        # Get data model information dynamically
+        data_models = [Address, ContactInfo, Document, Photo, Lease, Tenant, Unit, Entity, Property]
+        model_info = []
+        
+        for model in data_models:
+            # Get the class name
+            class_name = model.__name__
+            
+            # Get the fields from the dataclass
+            fields = []
+            for field in dataclasses.fields(model):
+                fields.append(f"{field.name} ({field.type.__name__ if hasattr(field.type, '__name__') else str(field.type)})")
+            
+            # Add the model info to the list
+            model_info.append(f"{class_name}: {', '.join(fields)}")
+        
+        data_model_info = "\n".join(model_info)
+        
         prompt = f"""Convert the following unstructured text about a property into a series of clear, line-by-line property management instructions.
 
 For example, given:
@@ -59,6 +83,23 @@ Rules:
 9. For phone/email combinations, split them into separate contact updates
 10. For unit numbers, include the bed count in the unit name if provided
 
+IMPORTANT: You must ensure that instructions are created in the correct order. For example:
+- Before setting a lease, make sure there's an instruction to create the unit first
+- Before adding a tenant to a unit, make sure there's an instruction to create the unit first
+- Before setting unit details, make sure there's an instruction to create the property first
+
+IMPORTANT: Only create instructions that are compatible with these data models:
+{data_model_info}
+
+IMPORTANT: Use these EXACT formats for instructions to ensure they can be processed correctly:
+- Property creation: "Create a new property called [NAME] at [ADDRESS]"
+- Unit creation: "Create unit [UNIT_NUMBER]"
+- Tenant creation: "Add tenant [NAME] to unit [UNIT_NUMBER]"
+- Lease updates: "Set lease for unit [UNIT_NUMBER] with rent [AMOUNT] and security deposit [AMOUNT]"
+- Owner updates: "Set the owner to [NAME]"
+- Contact updates: "Update the owner's email to [EMAIL]" or "Update the owner's phone to [PHONE]"
+- Document creation: "Add document [TYPE] with name [NAME] to property"
+
 Now, convert this text into property management instructions:
 
 {text}"""
@@ -67,7 +108,10 @@ Now, convert this text into property management instructions:
             print("\nSending text to OpenAI for conversion...")
             print(f"Model: {self.gpt_client.model}")
             
-            system_message = "You are a property management system that converts unstructured text into clear instructions."
+            system_message = """You are a property management system that converts unstructured text into clear instructions.
+You must ensure that instructions are created in the correct order, with prerequisite objects created before they are referenced.
+You must only create instructions that are compatible with the provided data models.
+You must use the exact instruction formats specified to ensure they can be processed correctly."""
             
             response = self.gpt_client.query(prompt, system_message)
             
@@ -109,4 +153,4 @@ def main():
         print(f"{i}. {instruction}")
 
 if __name__ == "__main__":
-    main() 
+    main()
