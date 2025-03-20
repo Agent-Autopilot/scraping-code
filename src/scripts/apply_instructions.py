@@ -18,6 +18,9 @@ parent_dir = str(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
+# Import utils for GPT client
+from .utils import GPTClient, get_data_models_description
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -27,8 +30,8 @@ class DataManager:
     
     def __init__(self):
         """Initialize the DataManager."""
-        pass
-    
+        self.gpt_client = GPTClient()
+        
     def load_json(self, file_path: str) -> Dict[str, Any]:
         """Load JSON data from a file.
         
@@ -58,12 +61,9 @@ class DataManager:
             data: Dictionary containing the data to save
             
         Returns:
-            True if successful, False otherwise
+            bool: True if save was successful
         """
         try:
-            # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
-            
             with open(file_path, 'w') as f:
                 json.dump(data, f, indent=2)
             return True
@@ -130,12 +130,12 @@ class DataManager:
             
         return collection_key
     
-    def apply_instruction(self, data: Dict[str, Any], instruction: Dict[str, Any]) -> Tuple[Dict[str, Any], bool, str]:
+    def apply_instruction(self, data: Dict[str, Any], instruction: Union[Dict[str, Any], str]) -> Tuple[Dict[str, Any], bool, str]:
         """Apply a single instruction to the data.
         
         Args:
-            data: The JSON data to modify
-            instruction: Dictionary containing the instruction details
+            data: The data to modify
+            instruction: The instruction to apply (can be a dictionary or a string)
             
         Returns:
             Tuple of (updated_data, success, message)
@@ -144,11 +144,27 @@ class DataManager:
             # Make a deep copy of the data to avoid modifying the original
             updated_data = copy.deepcopy(data)
             
-            # Extract instruction details
-            action = instruction.get('action')
-            entity_type = instruction.get('entity_type')
-            identifier = instruction.get('identifier')
-            fields = instruction.get('fields', {})
+            # Check if instruction is a string (natural language instruction)
+            if isinstance(instruction, str):
+                # Log the natural language instruction
+                logger.info(f"Natural language instruction: {instruction}")
+                
+                # Parse the natural language instruction
+                parsed_instruction = self._parse_natural_language_instruction(instruction, data)
+                if not parsed_instruction:
+                    return data, False, f"Failed to parse natural language instruction: {instruction}"
+                
+                # Use the parsed instruction
+                action = parsed_instruction.get('action')
+                entity_type = parsed_instruction.get('entity_type')
+                identifier = parsed_instruction.get('identifier')
+                fields = parsed_instruction.get('fields', {})
+            else:
+                # Extract instruction details from structured instruction
+                action = instruction.get('action')
+                entity_type = instruction.get('entity_type')
+                identifier = instruction.get('identifier')
+                fields = instruction.get('fields', {})
             
             # Validate required fields
             if not action or not entity_type or not identifier:
@@ -168,6 +184,126 @@ class DataManager:
             logger.error(f"Error applying instruction: {str(e)}")
             logger.error(traceback.format_exc())
             return data, False, f"Error: {str(e)}"
+            
+    def _parse_natural_language_instruction(self, instruction: str, current_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Parse a natural language instruction into a structured format using GPT.
+        
+        Args:
+            instruction: Natural language instruction string
+            current_data: Current JSON data for context
+            
+        Returns:
+            Structured instruction dictionary or None if parsing fails
+        """
+        try:
+            # Get data models description for context
+            data_models_description = get_data_models_description()
+            
+            # Create prompt for GPT
+            prompt = f"""You are a property management system that processes natural language updates into structured instructions.
+
+The property management system uses the following data models:
+{data_models_description}
+
+Current data:
+```json
+{json.dumps(current_data, indent=2)}
+```
+
+Your task is to analyze this natural language instruction and convert it into a structured format:
+"{instruction}"
+
+Return a JSON object with the following structure:
+{{
+    "action": "create|update|delete",
+    "entity_type": "Property|Unit|Tenant|Lease|ContactInfo|Address",
+    "identifier": {{
+        "field": "name|unitNumber|id",
+        "value": "value to identify the entity"
+    }},
+    "fields": {{
+        "field_name": "value",
+        ...
+    }}
+}}
+
+Guidelines:
+1. For 'create' action, include all necessary fields for the new entity
+2. For 'update' action, only include the fields that need to be changed
+3. For 'delete' action, only the identifier is needed
+4. Use appropriate field names from the data models
+5. Convert dates to YYYY-MM-DD format
+6. Remove formatting from phone numbers (just digits)
+7. Remove formatting from currency values (just digits)
+8. If the instruction is unclear or ambiguous, return null
+
+Example responses:
+1. For "Create a new property called The Roxbury Arms at 165-195 Mansion Rd, Cheshire, CT 06525":
+{{
+    "action": "create",
+    "entity_type": "Property",
+    "identifier": {{
+        "field": "name",
+        "value": "The Roxbury Arms"
+    }},
+    "fields": {{
+        "address": {{
+            "street": "165-195 Mansion Rd",
+            "city": "Cheshire",
+            "state": "CT",
+            "zip": "06525"
+        }}
+    }}
+}}
+
+2. For "Update the rent amount for unit 165 to $1200":
+{{
+    "action": "update",
+    "entity_type": "Unit",
+    "identifier": {{
+        "field": "unitNumber",
+        "value": "165"
+    }},
+    "fields": {{
+        "currentTenant": {{
+            "lease": {{
+                "rentAmount": 1200
+            }}
+        }}
+    }}
+}}
+
+3. For "Delete tenant John Smith from unit 101":
+{{
+    "action": "delete",
+    "entity_type": "Tenant",
+    "identifier": {{
+        "field": "name",
+        "value": "John Smith"
+    }}
+}}"""
+
+            # Get response from GPT
+            system_message = "You are a property management system that converts natural language instructions into structured format."
+            response = self.gpt_client.query(prompt, system_message, temperature=0.1)
+            
+            if not response:
+                logger.error("Failed to get response from GPT")
+                return None
+                
+            # Parse the response
+            try:
+                parsed = json.loads(response)
+                logger.info(f"Parsed instruction: {json.dumps(parsed, indent=2)}")
+                return parsed
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse GPT response as JSON: {str(e)}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error parsing natural language instruction: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
     
     def _create_entity(self, data: Dict[str, Any], entity_type: str, identifier: Dict[str, Any], fields: Dict[str, Any]) -> Tuple[Dict[str, Any], bool, str]:
         """Create a new entity in the data.
@@ -187,8 +323,15 @@ class DataManager:
             return data, False, f"Unknown entity type: {entity_type}"
         
         # Check if the entity already exists
-        entity, _, _ = self.find_entity(data, entity_type, identifier)
-        if entity:
+        entity, index, _ = self.find_entity(data, entity_type, identifier)
+        
+        # If the entity exists and it's a Property, update it instead of returning an error
+        if entity and entity_type == 'Property':
+            # Update the existing property with the new fields
+            for field, value in fields.items():
+                data[collection_key][field] = value
+            return data, True, f"Updated existing {entity_type} with {identifier['field']}={identifier['value']}"
+        elif entity:
             return data, False, f"{entity_type} with {identifier['field']}={identifier['value']} already exists"
         
         # Create the new entity
@@ -197,8 +340,13 @@ class DataManager:
         
         # Add the entity to the collection
         if entity_type == 'Property' and collection_key == 'property':
-            # For Property, replace the entire object
-            data[collection_key] = new_entity
+            # For Property, update the existing object
+            if collection_key in data and isinstance(data[collection_key], dict):
+                # Merge the new entity with the existing property
+                data[collection_key].update(new_entity)
+            else:
+                # Replace the entire object
+                data[collection_key] = new_entity
         else:
             # For other entities, add to the array
             if collection_key not in data:
@@ -223,7 +371,30 @@ class DataManager:
         entity, index, collection_key = self.find_entity(data, entity_type, identifier)
         
         if not entity:
-            return data, False, f"{entity_type} with {identifier['field']}={identifier['value']} not found"
+            # If the entity doesn't exist, create it instead
+            if entity_type == 'Property':
+                # For Property, create a new property with the fields
+                if collection_key not in data:
+                    data[collection_key] = {}
+                
+                # Set the identifier field
+                data[collection_key][identifier['field']] = identifier['value']
+                
+                # Update with the fields
+                for field, value in fields.items():
+                    data[collection_key][field] = value
+                
+                return data, True, f"Created new {entity_type} with {identifier['field']}={identifier['value']}"
+            else:
+                # For other entities, create a new entity in the collection
+                new_entity = {identifier['field']: identifier['value']}
+                new_entity.update(fields)
+                
+                if collection_key not in data:
+                    data[collection_key] = []
+                
+                data[collection_key].append(new_entity)
+                return data, True, f"Created new {entity_type} with {identifier['field']}={identifier['value']}"
         
         # Update the entity
         if entity_type == 'Property' and index is None:

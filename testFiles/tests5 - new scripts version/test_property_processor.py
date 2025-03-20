@@ -40,7 +40,7 @@ def test_property_processor():
     current_dir = Path(__file__).parent
     
     # Create output directory
-    output_dir = os.path.join(current_dir, "output")
+    output_dir = os.path.join(current_dir, "output3")
     os.makedirs(output_dir, exist_ok=True)
     
     # Define paths to the sample documents

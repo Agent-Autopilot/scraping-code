@@ -1,0 +1,56 @@
+{
+  "property": {
+    "name": "Default Property",
+    "address": {
+      "street": "10 Miles Ave",
+      "city": "Woodbridge",
+      "state": "CT",
+      "zip": ""
+    },
+    "city": "",
+    "state": "",
+    "zipCode": "",
+    "owner": "Woodbridge Community Partners, LLC",
+    "propertyType": "Duplex",
+    "yearBuilt": "",
+    "totalUnits": 1,
+    "contactInfo": {}
+  },
+  "units": [],
+  "tenants": [
+    {
+      "name": "Rebecca Rodriguez"
+    },
+    {
+      "name": "John Cain"
+    },
+    {
+      "name": "Jacqueline Cain"
+    }
+  ],
+  "leases": [
+    {
+      "propertyId": "Default Property",
+      "startDate": "2024-07-01",
+      "endDate": "2025-06-30",
+      "rentAmount": 2425,
+      "dueDate": "2024-06-01",
+      "securityDeposit": 2600,
+      "note": "A late fee of 50 will be applied for any rent payment not paid by the due date, with a grace period of 10 days. Additionally, a pet fee of 50 per month will be charged."
+    }
+  ],
+  "entitys": [
+    {
+      "name": "Woodbridge Community Partners, LLC",
+      "contactInfo": {
+        "email": "Vadim.Tantsyura@outlook.com"
+      }
+    }
+  ],
+  "null": [
+    {
+      "name": "Default Property",
+      "zip": "06525"
+    }
+  ]
+}

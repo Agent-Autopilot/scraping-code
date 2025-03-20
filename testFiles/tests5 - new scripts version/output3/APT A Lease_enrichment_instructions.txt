@@ -1,0 +1,9 @@
+1. Update the zip code for the property address to "06525" as it is currently missing.
+2. Add the property type as "Residential" based on the context of the lease agreement.
+3. Update the end date of the lease to "2025-06-30" as it is currently incorrectly stated as "June 31, 2025" in the text data.
+4. Update the due date for rent payments to "2024-06-01" as specified in the JSON, but clarify that it should be the 1st day of each calendar month starting from June 2024.
+5. Add the lessee names "Rebecca Rodriguez," "John Cain," and "Jacqueline Cain" to the tenants list in the JSON.
+6. Add the contact information for the owner, including phone number "2032335859" and email "Vadim.Tantsyura@outlook.com," to the entity's contactInfo field.
+7. Include a note in the lease agreement regarding the late fee of "$50.00 for any rent payment not paid by the due date (with a grace period of 10 days)" as it is mentioned in the text data but not in the JSON.
+8. Add a note in the lease agreement regarding the pet fee of "$50 per month" as it is mentioned in the text data but not in the JSON.
+9. Ensure that the property has a total units field set to "1" since there is a lease agreement present, indicating at least one unit is being rented.

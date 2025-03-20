@@ -1,0 +1,5 @@
+1. Add a new field to the property data to specify the property type as "duplex."
+2. Update the address field in the property data to include the city and state as follows:
+3. Update the owner field in the property data to include the owner's name as "Woodbridge Community Partners LLC."
+4. Add a new field to the owner entity to specify the owner type as "LLC."
+5. Clarify the owner's tax ID in the JSON data by explicitly labeling it as an EIN and ensuring it matches the format provided in the text ("33-3004577").

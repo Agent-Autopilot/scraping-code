@@ -1,0 +1,8 @@
+1. Update the zip code for the property address to 06525, as it is provided in the original text data.
+2. Remove the empty fields for city, state, and zipCode in the property JSON object, as they are redundant and should not be present when the address is already specified.
+3. Add the tax ID (EIN) for the owner "Woodbridge Community Partners, LLC" as 33-3004577, which is mentioned in the original text data.
+4. Add a phone number for the owner "Woodbridge Community Partners, LLC" if available, as the contact information is currently incomplete.
+5. Add the missing contact information for tenants Rebecca Rodriguez, John Cain, and Jacqueline Cain, as their contact details are not present in the JSON data.
+6. Ensure that the property type is explicitly defined in the JSON data; currently, it is listed as "Duplex," which is correct but should be verified against the original text data for consistency.
+7. Add the total number of units to the property JSON object if it is specified in the original text data; currently, it is set to 1, which should be confirmed.
+8. Ensure that the lease details are complete and consistent with the original text data, particularly regarding any additional notes or fees that may need to be explicitly stated in the lease agreement.

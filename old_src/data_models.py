@@ -34,19 +34,47 @@ class ContactInfo:
 
 @dataclass_json
 @dataclass
+class Document:
+    """Document metadata including type, URL, and upload information.
+    
+    Represents any document associated with properties, units, tenants, or leases.
+    """
+    id: str  # Only ID is required - Unique identifier for the document
+    type: Optional[str] = None  # e.g., 'lease', 'insurance', etc.
+    url: Optional[str] = None   # URL to access the document
+    name: Optional[str] = None  # Optional document name
+    uploadDate: Optional[str] = None  # ISO format date string for upload date
+
+@dataclass_json
+@dataclass
+class Photo:
+    """Photo metadata including URL and descriptive information.
+    
+    Represents photos associated with properties or units.
+    """
+    id: str  # Only ID is required - Unique identifier for the photo
+    url: Optional[str] = None  # URL to access the photo
+    dateTaken: Optional[str] = None  # ISO format date string when photo was taken
+    description: Optional[str] = None  # Optional photo description
+
+@dataclass_json
+@dataclass
 class Lease:
     """Lease agreement details including dates, amounts, and relationships.
     
     Represents a rental agreement between a tenant and property owner for a specific unit.
     """
+    # Only IDs are required to establish relationships
     propertyId: str  # Reference to the rented property
     unitId: str      # Reference to the rented unit
     tenantId: str    # Reference to the tenant
+    # All other fields are optional
     startDate: Optional[str] = None  # ISO format date string for lease start date
     endDate: Optional[str] = None    # ISO format date string for lease end date
     rentAmount: Optional[float] = None  # Monthly rent amount
     securityDeposit: Optional[float] = None  # Security deposit amount
     dueDate: Optional[str] = None  # Day of month rent is due (1-31) or text description
+    documents: Optional[List[Document]] = None  # Optional lease documents
 
 @dataclass_json
 @dataclass
@@ -59,6 +87,7 @@ class Tenant:
     contactInfo: Optional[ContactInfo] = None  # Contact information for the tenant
     ssn: Optional[str] = None  # Social security number for background check/identification
     lease: Optional[Lease] = None  # Current lease agreement
+    documents: Optional[List[Document]] = None  # Optional tenant documents
 
 @dataclass_json
 @dataclass
@@ -70,6 +99,8 @@ class Unit:
     unitNumber: str  # Only unit number is required as ID - Unit identifier within the property
     propertyId: str  # Property relationship is required - Reference to parent property
     currentTenant: Optional[Tenant] = None  # Current tenant, if unit is occupied
+    photos: Optional[List[Photo]] = None  # Array of photo URLs for the unit
+    documents: Optional[List[Document]] = None  # Optional unit documents
 
 @dataclass_json
 @dataclass
@@ -82,6 +113,7 @@ class Entity:
     type: Optional[str] = None  # e.g., 'INDIVIDUAL', 'LLC', etc. - Type of ownership entity
     contactInfo: Optional[ContactInfo] = None  # Contact information for the entity
     taxId: Optional[str] = None  # EIN or SSN - Tax ID (SSN for individuals, EIN for businesses)
+    documents: Optional[List[Document]] = None  # Optional entity documents
 
 @dataclass_json
 @dataclass
@@ -94,3 +126,4 @@ class Property:
     address: Optional[Address] = None  # Physical location of the property
     owner: Optional[Entity] = None  # Owner (individual or business) of the property
     units: Optional[List[Unit]] = None  # List of all units within this property
+    documents: Optional[List[Document]] = None  # Optional property documents 

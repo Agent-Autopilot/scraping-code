@@ -17,7 +17,8 @@ parent_dir = str(Path(__file__).parent.parent)
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-from src.scripts.utils import GPTClient, FileManager, get_data_models_description
+# Import utils directly
+from .utils import GPTClient, FileManager, get_data_models_description
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -101,34 +102,41 @@ class DataEnricher:
             # Provide a generic description if data models can't be loaded
             data_models_description = "Property management data including properties, units, tenants, leases, and related information."
         
-        # Format the JSON data for the prompt
-        json_str = json.dumps(json_data, indent=2)
-        
-        return f"""You are an AI assistant that helps enrich property management data.
-
-I have the following JSON data about a property:
-```json
-{json_str}
-```
-
-And I have this original text description:
-```
-{text_data}
-```
+        return f"""You are a property management data analyst. Your task is to analyze the current property data (in JSON format) and the original input data (in text format) to identify missing or incomplete information that could be filled in, as well as to identify and correct any errors in the existing data.
 
 The property management system uses the following data models:
 {data_models_description}
 
-Please analyze both the JSON data and the text description, and identify any information from the text that is missing in the JSON data. Then, provide:
+Please look for:
+1. Missing information in the JSON that is present in the text data (e.g., payment dates, contact information)
+2. Incomplete fields in the JSON (e.g., addresses missing zip codes)
+3. Inconsistencies between the JSON and text data
+4. Errors in the JSON data that need to be corrected (e.g., incorrect zip codes, wrong tenant names)
+5. Any other information that could be inferred or derived from the existing data
 
-1. A list of specific enrichment suggestions
-2. A list of instructions that could be used to update the JSON data
+IMPORTANT: Be very careful about making inferences. Do not assume that information about one entity (like an owner) applies to another entity (like a property) unless there is clear evidence. For example, the owner's address zip code should not be applied to the property address unless there is explicit evidence they are the same location.
 
-Focus on factual information that is clearly stated in the text but missing from the JSON. Do not make assumptions or add information that isn't explicitly mentioned in the text.
+For each issue you identify, provide a clear explanation and suggestion for how to fix it.
 
-Format your response in two sections:
-- "Enrichment Suggestions": A detailed explanation of what information is missing and should be added
-- "Update Instructions": A list of specific instructions in natural language that could be used to update the JSON data"""
+Current JSON data:
+```json
+{json.dumps(json_data, indent=2)}
+```
+
+Original text data:
+```
+{text_data}
+```
+
+Based on your analysis, provide a list of specific updates that should be made to enrich the data and correct any errors. Format your response as a series of natural language instructions that could be processed by a property management system.
+
+For example:
+1. Update the zip code for property address to 06525
+2. Set lease due date for unit 167 to the 15th of each month
+3. Add phone number 203-250-0285 for tenant Sherry in unit 165
+4. Correct the property zip code from 10960 to 06525 as it was incorrectly set to the owner's zip code
+
+Only include instructions for information that is missing, incorrect, or inconsistent based on the available data."""
 
     def _get_enrichment_suggestions(self, prompt: str) -> Tuple[str, List[str]]:
         """Get enrichment suggestions from GPT."""
@@ -137,7 +145,7 @@ Format your response in two sections:
             logger.info(f"Model: {self.gpt_client.model}")
             
             # Call GPT API
-            system_message = "You are an AI assistant that helps enrich property management data."
+            system_message = "You are a property management data analyst that identifies missing or incomplete information and corrects errors in property data."
             response = self.gpt_client.query(prompt, system_message, temperature=0.1)
             
             if not response:
@@ -159,32 +167,13 @@ Format your response in two sections:
         instructions = []
         lines = text.strip().split('\n')
         
-        # Look for the "Update Instructions" section
-        in_instructions_section = False
+        # Look for lines that start with a number followed by a period
         for line in lines:
-            # Check if we're entering the instructions section
-            if "Update Instructions" in line or "UPDATE INSTRUCTIONS" in line:
-                in_instructions_section = True
-                continue
-                
-            # Skip lines until we reach the instructions section
-            if not in_instructions_section:
-                continue
-                
-            # Look for lines that start with a number followed by a period
             if line.strip() and line.strip()[0].isdigit() and '. ' in line:
                 # Extract the instruction part (after the number and period)
                 parts = line.split('. ', 1)
                 if len(parts) > 1:
                     instructions.append(parts[1].strip())
-        
-        # If we didn't find a specific section, fall back to looking for numbered lines anywhere
-        if not instructions:
-            for line in lines:
-                if line.strip() and line.strip()[0].isdigit() and '. ' in line:
-                    parts = line.split('. ', 1)
-                    if len(parts) > 1:
-                        instructions.append(parts[1].strip())
         
         return instructions
     

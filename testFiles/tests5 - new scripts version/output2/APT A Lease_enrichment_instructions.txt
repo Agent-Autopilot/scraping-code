@@ -1,0 +1,13 @@
+1. Update the property address in the JSON data to:
+2. Add the property owner to the JSON data:
+3. Update the lease information in the JSON data to reflect the correct lessees and rent amount:
+4. Add the security deposit information to the lease:
+5. Add utility responsibilities to the lease:
+6. Add repair responsibilities to the lease:
+7. Add late payment details to the lease:
+8. Add inspection rights to the lease:
+9. Add maintenance responsibilities to the lease:
+10. Add pet agreement details to the lease:
+11. Add parking information to the property:
+12. Add additional terms to the lease:
+13. Add governing law to the lease:

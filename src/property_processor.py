@@ -14,11 +14,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Import from scripts
-from src.scripts.document_converter import extract_relevant_text
-from src.scripts.nlp_processor import UpdateProcessor
-from src.scripts.data_manager import DataManager
-from src.scripts.data_enricher import DataEnricher
-from src.scripts.utils import FileManager
+from .scripts.document_converter import extract_relevant_text
+from .scripts.text_to_instructions import UpdateProcessor
+from .scripts.apply_instructions import DataManager
+from .scripts.data_enricher import DataEnricher
+from .scripts.utils import FileManager
 
 class PropertyProcessor:
     """Unified interface for processing property documents and data.
@@ -49,10 +49,21 @@ class PropertyProcessor:
                 logger.info(f"Loaded template from {self.template_path}")
                 return template
                 
-        # Create empty template
+        # Create empty template with proper structure
         logger.info("Creating empty template")
         return {
-            "property": {},
+            "property": {
+                "name": "Default Property",
+                "address": "",
+                "city": "",
+                "state": "",
+                "zipCode": "",
+                "owner": "",
+                "propertyType": "",
+                "yearBuilt": "",
+                "totalUnits": "",
+                "contactInfo": {}
+            },
             "units": [],
             "tenants": [],
             "leases": []
@@ -122,18 +133,49 @@ class PropertyProcessor:
         
         # Apply instructions
         instruction_list = instructions.get("instructions", [])
-        results = self.data_manager.apply_instructions(temp_json_path, instruction_list)
         
-        # Load the updated JSON
-        updated_json = FileManager.load_json(temp_json_path)
+        # Initialize results
+        results = {
+            "success": True,
+            "failed_instructions": [],
+            "messages": []
+        }
         
-        # Clean up temporary file
-        if os.path.exists(temp_json_path):
-            os.remove(temp_json_path)
+        # Create a DataManager instance
+        data_manager = DataManager()
+        
+        # Apply each instruction individually
+        updated_data = json_data.copy()
+        for i, instruction in enumerate(instruction_list):
+            try:
+                # Apply the instruction
+                updated_data, success, message = data_manager.apply_instruction(updated_data, instruction)
+                
+                # Record the result
+                results["messages"].append(message)
+                
+                if not success:
+                    results["success"] = False
+                    results["failed_instructions"].append({
+                        "index": i,
+                        "instruction": instruction,
+                        "error": message
+                    })
+            except Exception as e:
+                error_message = f"Error applying instruction {i}: {str(e)}"
+                logger.error(error_message)
+                
+                results["success"] = False
+                results["messages"].append(error_message)
+                results["failed_instructions"].append({
+                    "index": i,
+                    "instruction": instruction,
+                    "error": str(e)
+                })
         
         # Save updated JSON if requested
         if save_path:
-            FileManager.save_json(save_path, updated_json)
+            FileManager.save_json(save_path, updated_data)
             logger.info(f"Saved updated JSON to {save_path}")
         
         # Save failed instructions if requested
@@ -144,7 +186,11 @@ class PropertyProcessor:
             })
             logger.info(f"Saved failed instructions to {save_failed_path}")
         
-        return updated_json, results
+        # Clean up temporary file
+        if os.path.exists(temp_json_path):
+            os.remove(temp_json_path)
+        
+        return updated_data, results
     
     def enrich_json_with_text(self, 
                              json_data: Dict[str, Any], 

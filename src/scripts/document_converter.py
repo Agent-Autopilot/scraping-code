@@ -16,7 +16,7 @@ if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
 # Import from scripts.utils
-from src.scripts.utils import GPTClient, get_data_models_description
+from .utils import GPTClient, get_data_models_description
 
 # Document conversion libraries
 try:

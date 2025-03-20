@@ -1,0 +1,65 @@
+{
+  "failed_instructions": [
+    {
+      "index": 2,
+      "instruction": "Request clarification on which lease information needs to be updated, including specific lessees and the new rent amount.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 3,
+      "instruction": "Add security deposit information to the lease, but please provide the specific amount and details for processing.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 4,
+      "instruction": "Add utility responsibilities to the lease, but specify the lease details and the exact responsibilities to be included.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 5,
+      "instruction": "Add repair responsibilities to the lease, details unspecified",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 6,
+      "instruction": "Request clarification on the specific late payment details to be added to the lease.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 8,
+      "instruction": "Clarify which lease should have maintenance responsibilities added",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 10,
+      "instruction": "Add pet agreement details to the lease, but specific details are needed to proceed.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 12,
+      "instruction": "Request clarification on the specific additional terms to be added to the lease.",
+      "error": "Lease with name=Default Property already exists"
+    },
+    {
+      "index": 13,
+      "instruction": "Request clarification on which lease the governing law should be added to and the specific governing law details.",
+      "error": "Lease with name=Default Property already exists"
+    }
+  ],
+  "messages": [
+    "Updated existing Property with name=Default Property",
+    "Updated existing Property with name=Default Property",
+    "Lease with name=Default Property already exists",
+    "Lease with name=Default Property already exists",
+    "Lease with name=Default Property already exists",
+    "Lease with name=Default Property already exists",
+    "Lease with name=Default Property already exists",
+    "Updated existing Property with name=Default Property",
+    "Lease with name=Default Property already exists",
+    "Updated Lease with name=Default Property",
+    "Lease with name=Default Property already exists",
+    "Updated existing Property with name=Default Property",
+    "Lease with name=Default Property already exists",
+    "Lease with name=Default Property already exists"
+  ]
+}

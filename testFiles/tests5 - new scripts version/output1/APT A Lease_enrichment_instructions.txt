@@ -1,0 +1,9 @@
+1. Update the `zip` field in the address to include the correct zip code for Woodbridge, Connecticut.
+2. Add contact information for each tenant (John Cain, Rebecca Rodriguez, Jacqueline Cain) in the `tenants` array. This could include phone numbers or email addresses if available.
+3. Change the `dueDate` in the lease details from "2024-06-01" to "2024-06-24" to reflect the correct payment due date as per the text description.
+4. Add a new field in the lease details or property information to specify utility responsibilities as follows:
+5. Include the following fees in the lease details:
+6. Add a pet policy to the lease details indicating that pets are allowed with a pet fee of $50.00 per month.
+7. Include a requirement for renter's insurance in the lease details, specifying coverage for personal property of at least $100,000 and liability coverage of at least $250,000.
+8. Add conditions for the return of the security deposit in the lease details as follows:
+9. Add a section for signatures in the JSON, including:
