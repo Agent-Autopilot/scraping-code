@@ -1,0 +1,14 @@
+{
+  "instructions": [
+    "Create a new lease agreement for the property at 10 Miles Ave, Woodbridge, Connecticut.",
+    "Set the lessor to Woodbridge Community Partners, LLC.",
+    "Set the lessees to Rebecca Rodriguez, John Cain, and Jacqueline Cain.",
+    "Set the lease start date to 2024-07-01.",
+    "Set the lease end date to 2025-06-30.",
+    "Set the monthly rent amount to 2425.",
+    "Set the total monthly payment amount (including pet fee) to 2475.",
+    "Set the payment due date to the 1st day of each calendar month.",
+    "Set the payment method to bank deposit to Lessor\u2019s Account at Bank of America or designated place.",
+    "Specify that the lessee shall pay for electric, internet, or cable services."
+  ]
+}

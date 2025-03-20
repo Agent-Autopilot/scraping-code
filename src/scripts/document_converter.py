@@ -22,6 +22,12 @@ from .utils import GPTClient, get_data_models_description
 try:
     import PyPDF2
     from docx import Document as DocxDocument
+    # Excel libraries
+    try:
+        import pandas as pd
+        PANDAS_AVAILABLE = True
+    except ImportError:
+        PANDAS_AVAILABLE = False
     # Textract is optional
     try:
         import textract
@@ -29,7 +35,7 @@ try:
     except ImportError:
         TEXTRACT_AVAILABLE = False
 except ImportError:
-    logging.warning("Some document conversion libraries are missing. Run 'pip install PyPDF2 python-docx' to install them.")
+    logging.warning("Some document conversion libraries are missing. Run 'pip install PyPDF2 python-docx pandas' to install them.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -60,6 +66,54 @@ def extract_text_from_docx(file_path: str) -> str:
         logger.error(f"Error extracting text from DOCX: {str(e)}")
         logger.error(traceback.format_exc())
         return f"Error extracting text: {str(e)}"
+
+def extract_text_from_excel(file_path: str) -> str:
+    """Extract text from Excel files (.xlsx and .xls)."""
+    if not PANDAS_AVAILABLE:
+        return "Pandas not available. Install with 'pip install pandas openpyxl xlrd'."
+    
+    try:
+        # Read all sheets from the Excel file
+        excel_file = pd.ExcelFile(file_path)
+        
+        # Initialize text output
+        text = f"Excel file: {os.path.basename(file_path)}\n\n"
+        
+        # Process each sheet
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            
+            # Skip empty sheets
+            if df.empty:
+                continue
+                
+            # Add sheet name as header
+            text += f"Sheet: {sheet_name}\n"
+            text += "=" * 50 + "\n"
+            
+            # Fill NaN values with empty string for text representation
+            df = df.fillna("")
+            
+            # Get column names as headers
+            headers = ", ".join(str(col) for col in df.columns)
+            text += f"Headers: {headers}\n\n"
+            
+            # Convert each row to a readable text format
+            for idx, row in df.iterrows():
+                row_text = f"Row {idx+1}:\n"
+                for col in df.columns:
+                    value = row[col]
+                    if value:  # Only include non-empty values
+                        row_text += f"  {col}: {value}\n"
+                text += row_text + "\n"
+            
+            text += "\n\n"
+        
+        return text
+    except Exception as e:
+        logger.error(f"Error extracting text from Excel file: {str(e)}")
+        logger.error(traceback.format_exc())
+        return f"Error extracting text from Excel file: {str(e)}"
 
 def extract_text_using_textract(file_path: str) -> str:
     """Extract text using textract (fallback method)."""
@@ -95,6 +149,11 @@ def extract_text_from_document(file_path: str) -> str:
         text = extract_text_from_pdf(file_path)
     elif file_extension == '.docx':
         text = extract_text_from_docx(file_path)
+    elif file_extension in ['.xlsx', '.xls']:
+        if PANDAS_AVAILABLE:
+            text = extract_text_from_excel(file_path)
+        else:
+            return f"Excel support not available. Install pandas with 'pip install pandas openpyxl xlrd'."
     else:
         # Try textract as a fallback for other file types
         if TEXTRACT_AVAILABLE:

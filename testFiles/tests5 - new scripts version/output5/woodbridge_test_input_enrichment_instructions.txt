@@ -1,0 +1,8 @@
+1. Update the EIN for the property from "333004577" to "33-3004577" to correct the format based on the original text data.
+2. Add the property type as "duplex" to the property information to provide a complete description.
+3. Update the contact information for tenants to include unique contact details instead of duplicating the property manager's contact information. Each tenant should have their own contact information.
+4. Set the `propertyId` field in the lease with ID "1" to the corresponding property ID to establish the relationship between the lease and the property.
+5. Set the `tenantId` field in the lease with ID "1" to "1" to link the lease to the tenant "Rebecca Rodriguez."
+6. Add a `unitId` field in the lease with ID "1" to specify which unit the lease is associated with, if applicable.
+7. Ensure that the `ssn` fields for all tenants are updated with valid Social Security Numbers if available, as they are currently empty.
+8. Update the `contactInfoId` fields for all tenants to link them to their respective contact information, ensuring that each tenant has a unique identifier for their contact details.

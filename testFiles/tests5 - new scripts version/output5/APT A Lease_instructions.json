@@ -1,0 +1,28 @@
+{
+  "analysis": "This update involves creating a new lease agreement for a property located at 10 Miles Ave, Woodbridge, Connecticut, with multiple lessees and detailed terms regarding rent, utilities, repairs, security deposit, and other conditions.",
+  "instructions": [
+    "Create a new property at 10 Miles Ave, Woodbridge, Connecticut",
+    "Create a new lease for lessees Rebecca Rodriguez, John Cain, and Jacqueline Cain",
+    "Set the lease term to start on 2024-07-01 and end on 2025-06-30",
+    "Set the monthly rent to 2425",
+    "Set the total rent with pet fee to 2475",
+    "Set the rent due date to the 1st day of each calendar month, beginning on 2024-06-24",
+    "Allow payment methods: personal check, cashier's check, money order, or wire transfer",
+    "Assign utilities responsibility: lessees to pay for electric, internet, and cable services; lessor to pay for water and sewer costs",
+    "Require lessees to pay for professional cleaning services before vacating the premises",
+    "Set lessee responsibility for minor repairs up to 100",
+    "Set lessor reimbursement for repairs over 250 unless caused by lessee's negligence",
+    "Set the security deposit amount to 2600",
+    "Define conditions for security deposit refund: no outstanding utility bills or rent payments, no unreasonable damage or alterations, return of all keys and fobs, removal of all personal items",
+    "Set late fee to 50 for any rent payment not paid by the due date with a grace period of 10 days",
+    "Allow pets with a pet fee of 50 per month",
+    "Ensure lessees have peaceful enjoyment of the leased premises",
+    "Grant lessor the right to inspect the premises with 24-hour notice",
+    "Assign lessee responsibility for maintaining the premises in good order and repair",
+    "Require lessees to report any water leaks or malfunctions immediately",
+    "Require lessees to provide 30 days written notice for early termination",
+    "Set lessee responsibility for rent payment for the remainder of the lease term upon early termination",
+    "Set lessor telephone number to 2032335859",
+    "Set lessor email to Vadim.Tantsyura@outlook.com"
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "property": {
+    "id": "ef520943-041f-45ba-a236-3ecaae49ac0c",
+    "name": "",
+    "addressId": null,
+    "address": {
+      "id": "6347f54c-d90a-42e0-87eb-337d785d5aaa",
+      "street": "10 Miles Ave",
+      "city": "Woodbridge",
+      "state": "Connecticut",
+      "zip": ""
+    },
+    "ownerId": null,
+    "owner": {
+      "id": "ea1e369b-1b78-4dbc-9254-19b6ed44983b",
+      "name": "Woodbridge Community Partners, LLC",
+      "type": "",
+      "contactInfoId": null,
+      "contactInfo": {
+        "id": "69dd0bdb-5d4b-4872-b259-f41ccaafc091",
+        "email": "",
+        "phone": "",
+        "addressId": null,
+        "address": null
+      },
+      "taxId": null
+    },
+    "unitIds": [],
+    "units": [],
+    "leases": [
+      {
+        "id": "26472811-8050-4283-b1ab-a6c1c3549ff5",
+        "propertyId": "",
+        "unitId": null,
+        "tenantId": null,
+        "startDate": "2024-07-01",
+        "endDate": "2025-06-30",
+        "rentAmount": 2425,
+        "securityDeposit": null,
+        "dueDate": "1"
+      }
+    ],
+    "tenants": [
+      {
+        "id": "cd9096b5-d31b-47b2-90e8-fec23cfeb751",
+        "name": "Rebecca Rodriguez",
+        "contactInfoId": null,
+        "contactInfo": null,
+        "ssn": null,
+        "leaseId": "",
+        "lease": null
+      },
+      {
+        "id": "8fff88f7-c51a-4633-b48f-b1d3f112355b",
+        "name": "John Cain",
+        "contactInfoId": null,
+        "contactInfo": null,
+        "ssn": null,
+        "leaseId": "",
+        "lease": null
+      },
+      {
+        "id": "9167326a-d983-4be7-8591-75d8e1431493",
+        "name": "Jacqueline Cain",
+        "contactInfoId": null,
+        "contactInfo": null,
+        "ssn": null,
+        "leaseId": "",
+        "lease": null
+      }
+    ],
+    "paymentDetails": {
+      "totalMonthlyPayment": 2475,
+      "paymentMethod": "bank deposit to Lessor\u2019s Account at Bank of America or designated place",
+      "lesseeResponsibilities": "lessee shall pay for electric, internet, or cable services"
+    },
+    "leasesIds": [
+      "26472811-8050-4283-b1ab-a6c1c3549ff5"
+    ],
+    "tenantsIds": [
+      "cd9096b5-d31b-47b2-90e8-fec23cfeb751",
+      "8fff88f7-c51a-4633-b48f-b1d3f112355b",
+      "9167326a-d983-4be7-8591-75d8e1431493"
+    ]
+  },
+  "propertyId": "ef520943-041f-45ba-a236-3ecaae49ac0c"
+}

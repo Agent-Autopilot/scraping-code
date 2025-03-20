@@ -1,0 +1,33 @@
+{
+  "analysis": "This update provides detailed information about a lease agreement for a property located at 10 Miles Ave, Woodbridge, Connecticut, including terms related to rent, utilities, repairs, security deposit, late payments, pets, tenant responsibilities, inspection rights, termination, and additional terms.",
+  "instructions": [
+    "Create a new lease agreement for the property at 10 Miles Ave, Woodbridge, Connecticut.",
+    "Set the lessor to Woodbridge Community Partners, LLC.",
+    "Set the lessees to Rebecca Rodriguez, John Cain, and Jacqueline Cain.",
+    "Set the lease start date to 2024-07-01.",
+    "Set the lease end date to 2025-06-30.",
+    "Set the monthly rent amount to 2425.",
+    "Set the total monthly payment amount (including pet fee) to 2475.",
+    "Set the payment due date to the 1st day of each calendar month.",
+    "Set the payment method to bank deposit to Lessor\u2019s Account at Bank of America or designated place.",
+    "Specify that the lessee shall pay for electric, internet, or cable services.",
+    "Specify that the lessor shall be responsible for water and sewer costs.",
+    "Specify that the lessee shall pay for professional cleaning services before vacating.",
+    "Set the lessee's responsibility for minor repairs up to 100.",
+    "Set the lessor's reimbursement for repairs over 250 per repair, unless caused by lessee's negligence.",
+    "Set the security deposit amount to 2600.",
+    "Specify conditions for security deposit refund: must have no outstanding utility bills or rent payments, no unreasonable damage or alterations, return all keys, and remove all personal items.",
+    "Set a late fee of 50 for any rent payment not paid by the due date, with a grace period of 10 days.",
+    "Allow pets with a monthly fee of 50, and specify that the lessee must comply with pet rules and regulations.",
+    "Specify that the lessee must maintain the premises in good order and repair.",
+    "Specify that the lessee must report any water leaks or malfunctions immediately.",
+    "Specify that the lessee is responsible for pest control and must take precautions against infestations.",
+    "Specify that the lessor has the right to inspect the premises with 24-hour notice.",
+    "Specify that the lessee must provide 30 days written notice for early termination and is responsible for rent for the remainder of the lease term.",
+    "Set the lessor telephone number to 2032335859.",
+    "Set the lessor email to Vadim.Tantsyura@outlook.com.",
+    "Specify that the lessee must maintain a minimum heat of 55 degrees Fahrenheit.",
+    "Specify that smoking is not allowed on the premises.",
+    "Specify that the lessee is responsible for maintaining smoke detectors and notifying the lessor if they are not working properly."
+  ]
+}

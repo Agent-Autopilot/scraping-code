@@ -1,0 +1,111 @@
+{
+  "property": {
+    "name": "Default Property",
+    "address": "10 Miles Ave",
+    "city": "Woodbridge",
+    "state": "Connecticut",
+    "zipCode": "06525",
+    "owner": "Woodbridge Community Partners LLC",
+    "propertyType": "",
+    "yearBuilt": "",
+    "totalUnits": "",
+    "contactInfo": {
+      "phone": "2032335859",
+      "email": "Vadim.Tantsyura@outlook.com"
+    },
+    "lessorReimbursement": {
+      "amount": 250,
+      "conditions": "unless caused by lessee's negligence"
+    },
+    "securityDeposit": 2600,
+    "securityDepositRefundConditions": [
+      "no outstanding utility bills or rent payments",
+      "no unreasonable damage or alterations",
+      "return of all keys and fobs",
+      "removal of all personal items"
+    ],
+    "lateFee": {
+      "amount": 50,
+      "gracePeriod": 10
+    },
+    "petPolicy": {
+      "allowed": true,
+      "petFee": 50
+    },
+    "lesseeRights": {
+      "peacefulEnjoyment": true,
+      "maintenanceResponsibility": true,
+      "reportingObligations": [
+        "report any water leaks or malfunctions immediately",
+        "provide 30 days written notice for early termination"
+      ],
+      "rentPaymentResponsibility": true
+    },
+    "lessorRights": {
+      "inspection": {
+        "noticePeriod": 24
+      }
+    },
+    "ein": "333004577"
+  },
+  "units": [],
+  "tenants": [
+    {
+      "id": "1",
+      "name": "Rebecca Rodriguez",
+      "contactInfoId": "",
+      "contactInfo": {
+        "phone": "2032335859",
+        "email": "Vadim.Tantsyura@outlook.com"
+      },
+      "ssn": "",
+      "leaseId": "",
+      "lease": {}
+    },
+    {
+      "id": "2",
+      "name": "John Cain",
+      "contactInfoId": "",
+      "contactInfo": {
+        "phone": "2032335859",
+        "email": "Vadim.Tantsyura@outlook.com"
+      },
+      "ssn": "",
+      "leaseId": "",
+      "lease": {}
+    },
+    {
+      "id": "3",
+      "name": "Jacqueline Cain",
+      "contactInfoId": "",
+      "contactInfo": {
+        "phone": "2032335859",
+        "email": "Vadim.Tantsyura@outlook.com"
+      },
+      "ssn": "",
+      "leaseId": "",
+      "lease": {}
+    }
+  ],
+  "leases": [
+    {
+      "id": "1",
+      "propertyId": "",
+      "unitId": "",
+      "tenantId": "",
+      "startDate": "2024-07-01",
+      "endDate": "2025-06-30",
+      "rentAmount": 2425,
+      "securityDeposit": 2600,
+      "dueDate": "2024-06-24"
+    }
+  ],
+  "tenantsIds": [
+    "1",
+    "2",
+    "3"
+  ],
+  "leasesIds": [
+    "1"
+  ]
+}

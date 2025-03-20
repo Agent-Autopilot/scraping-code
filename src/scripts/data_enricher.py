@@ -114,6 +114,15 @@ Please look for:
 4. Errors in the JSON data that need to be corrected (e.g., incorrect zip codes, wrong tenant names)
 5. Any other information that could be inferred or derived from the existing data
 
+CRITICAL GUIDELINES TO PREVENT DUPLICATION:
+1. DO NOT create duplicate data structures. Always update existing ones.
+2. DO NOT add new properties, units, tenants or leases unless they are completely missing from the JSON.
+3. DO NOT create redundant fields or arrays that already exist in the JSON.
+4. When property, unit, tenant, or lease records already exist, update their existing fields instead of creating new records.
+5. DO NOT create duplicate arrays or nested structures when they already exist in the JSON schema.
+6. If a field already contains a value, only update it if the value is incorrect or incomplete.
+7. Use ID reference fields to link entities rather than creating nested duplicates.
+
 IMPORTANT: Be very careful about making inferences. Do not assume that information about one entity (like an owner) applies to another entity (like a property) unless there is clear evidence. For example, the owner's address zip code should not be applied to the property address unless there is explicit evidence they are the same location.
 
 For each issue you identify, provide a clear explanation and suggestion for how to fix it.
@@ -136,7 +145,7 @@ For example:
 3. Add phone number 203-250-0285 for tenant Sherry in unit 165
 4. Correct the property zip code from 10960 to 06525 as it was incorrectly set to the owner's zip code
 
-Only include instructions for information that is missing, incorrect, or inconsistent based on the available data."""
+Only include instructions for information that is missing, incorrect, or inconsistent based on the available data. Each instruction should modify only one field at a time to avoid duplication."""
 
     def _get_enrichment_suggestions(self, prompt: str) -> Tuple[str, List[str]]:
         """Get enrichment suggestions from GPT."""

@@ -7,6 +7,7 @@ creating structured JSON data, and enriching it with missing information.
 import os
 import json
 import logging
+import uuid
 from typing import Dict, Any, Optional, List, Tuple
 
 # Configure logging
@@ -18,6 +19,7 @@ from .scripts.document_converter import extract_relevant_text
 from .scripts.text_to_instructions import UpdateProcessor
 from .scripts.apply_instructions import JSONUpdater
 from .scripts.data_enricher import DataEnricher
+from .scripts.json_restructurer import JSONRestructurer
 from .scripts.utils import FileManager
 
 class PropertyProcessor:
@@ -36,6 +38,7 @@ class PropertyProcessor:
         self.update_processor = UpdateProcessor()
         self.data_manager = JSONUpdater()
         self.data_enricher = DataEnricher()
+        self.json_restructurer = JSONRestructurer()
         self.template_path = template_path
         
         # Load or create template
@@ -109,6 +112,112 @@ class PropertyProcessor:
             
         return instructions
     
+    def restructure_json(self, 
+                       json_data: Dict[str, Any], 
+                       save_path: Optional[str] = None) -> Dict[str, Any]:
+        """Restructure JSON data to maximize parent-child relationships.
+        
+        This method uses OpenAI to analyze ID references in the data and
+        create a more hierarchical structure where entities are nested
+        within their logical parent entities.
+        
+        Args:
+            json_data: The JSON data to restructure
+            save_path: Optional path to save the restructured JSON
+            
+        Returns:
+            The restructured JSON data
+        """
+        logger.info("Restructuring JSON to optimize parent-child relationships...")
+        
+        # Use the JSONRestructurer to restructure the data
+        restructured_data = self.json_restructurer.restructure_json(json_data)
+        
+        # Save the restructured data if requested
+        if save_path and restructured_data:
+            FileManager.save_json(save_path, restructured_data)
+            logger.info(f"Saved restructured JSON to {save_path}")
+        
+        return restructured_data
+    
+    def ensure_model_ids(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensure all models have unique IDs and properly reference each other.
+        
+        This method recursively traverses the JSON structure and:
+        1. Adds missing IDs to objects
+        2. Updates reference fields to point to the correct IDs
+        
+        Args:
+            data: The JSON data to process
+            
+        Returns:
+            The updated JSON data with proper IDs and references
+        """
+        def generate_id() -> str:
+            """Generate a unique ID string."""
+            return str(uuid.uuid4())
+        
+        def process_object(obj: Dict[str, Any], parent_key: str = "") -> Dict[str, Any]:
+            """Process an object to ensure it has an ID and proper references."""
+            if not isinstance(obj, dict):
+                return obj
+                
+            # Add ID if missing
+            if "id" in obj and not obj["id"]:
+                obj["id"] = generate_id()
+                
+            # Get a list of keys to safely iterate over
+            keys = list(obj.keys())
+            
+            # Process nested objects and maintain ID references
+            for key in keys:
+                value = obj[key]
+                # Skip null values
+                if value is None:
+                    continue
+                    
+                # Process nested objects
+                if isinstance(value, dict):
+                    # Add ID reference if the field ends with 'Id' and the corresponding object exists
+                    ref_field = f"{key}Id"
+                    if ref_field not in obj and "id" in value:
+                        obj[ref_field] = value["id"] if value["id"] else generate_id()
+                        if not value["id"]:
+                            value["id"] = obj[ref_field]
+                            
+                    # Recursively process the nested object
+                    obj[key] = process_object(value, key)
+                    
+                # Process lists
+                elif isinstance(value, list):
+                    # Handle list of objects
+                    new_list = []
+                    ids_list = []
+                    
+                    for item in value:
+                        if isinstance(item, dict):
+                            processed_item = process_object(item, key)
+                            if "id" in processed_item and processed_item["id"]:
+                                ids_list.append(processed_item["id"])
+                            new_list.append(processed_item)
+                        else:
+                            new_list.append(item)
+                            
+                    obj[key] = new_list
+                    
+                    # Add reference list if missing
+                    list_ref_field = f"{key}Ids"
+                    if ids_list and list_ref_field not in obj:
+                        obj[list_ref_field] = ids_list
+                        
+            return obj
+            
+        # Make a deep copy of the data to avoid modifying the original
+        data_copy = json.loads(json.dumps(data))
+        
+        # Start processing from the root
+        return process_object(data_copy)
+        
     def apply_instructions_to_json(self, 
                                   json_data: Dict[str, Any], 
                                   instructions: Dict[str, Any],
@@ -145,6 +254,9 @@ class PropertyProcessor:
         updated_data, failed_instructions, messages = data_manager.update_json_batch(
             json_data.copy(), instruction_list, batch_size
         )
+        
+        # Ensure all models have proper IDs and references
+        updated_data = self.ensure_model_ids(updated_data)
         
         # Format results
         results = {
@@ -201,7 +313,8 @@ class PropertyProcessor:
     def process_document(self, 
                         document_path: str, 
                         output_dir: Optional[str] = None,
-                        save_intermediates: bool = True) -> Dict[str, Any]:
+                        save_intermediates: bool = True,
+                        restructure_output: bool = False) -> Dict[str, Any]:
         """Process a document to create and enrich a JSON representation.
         
         This is the main function that combines all steps:
@@ -209,11 +322,13 @@ class PropertyProcessor:
         2. Generate structured instructions from text
         3. Apply instructions to create/update JSON
         4. Enrich JSON with any missing information
+        5. Optionally restructure the JSON to optimize parent-child relationships
         
         Args:
             document_path: Path to the document file
             output_dir: Directory to save output files (if None, uses document directory)
             save_intermediates: Whether to save intermediate results
+            restructure_output: Whether to restructure the final JSON
             
         Returns:
             The final enriched JSON data
@@ -248,45 +363,65 @@ class PropertyProcessor:
         json_path = os.path.join(output_dir, f"{base_name}.json")
         failed_path = os.path.join(output_dir, f"{base_name}_failed_instructions.json") if save_intermediates else None
         json_data, results = self.apply_instructions_to_json(
-            self.template.copy(), 
-            instructions, 
-            json_path, 
-            failed_path
+            self.template.copy(), instructions, json_path, failed_path
         )
         
-        # Step 4: Enrich JSON with any missing information
+        if not json_data or not results["success"]:
+            logger.warning(f"Some instructions failed: {len(results.get('failed_instructions', []))} failures")
+        
+        # Step 4: Enrich JSON with any missing information using the original text
         enrichment_path = os.path.join(output_dir, f"{base_name}_enrichment_instructions.txt") if save_intermediates else None
         enrichment_instructions = self.enrich_json_with_text(json_data, text, enrichment_path)
         
         # Apply enrichment instructions if any
         if enrichment_instructions:
             logger.info(f"Found {len(enrichment_instructions)} enrichment instructions")
+            enriched_path = os.path.join(output_dir, f"{base_name}_enriched.json")
             
-            # Convert natural language instructions to structured format
-            structured_enrichments = []
-            for instruction in enrichment_instructions:
-                enrichment_result = self.update_processor.process_update(instruction)
-                if enrichment_result and "instructions" in enrichment_result:
-                    structured_enrichments.extend(enrichment_result["instructions"])
+            # Process enrichment instructions in a batch to prevent duplication
+            batch_size = min(10, len(enrichment_instructions))
+            enriched_data, enrichment_results = self.apply_instructions_to_json(
+                json_data, 
+                {"instructions": enrichment_instructions}, 
+                enriched_path,
+                batch_size=batch_size
+            )
             
-            if structured_enrichments:
-                # Apply enrichment instructions
-                enriched_json_path = os.path.join(output_dir, f"{base_name}_enriched.json")
-                enriched_failed_path = os.path.join(output_dir, f"{base_name}_enrichment_failed.json") if save_intermediates else None
-                json_data, _ = self.apply_instructions_to_json(
-                    json_data, 
-                    {"instructions": structured_enrichments}, 
-                    enriched_json_path, 
-                    enriched_failed_path
-                )
-        
-        return json_data
+            # Final step: Ensure all models have proper IDs and references
+            enriched_data = self.ensure_model_ids(enriched_data)
+            
+            # Save the final enriched data with proper IDs
+            if save_intermediates:
+                FileManager.save_json(enriched_path, enriched_data)
+            
+            # Step 5: Restructure the JSON if requested
+            if restructure_output:
+                restructured_path = os.path.join(output_dir, f"{base_name}_restructured.json")
+                restructured_data = self.restructure_json(enriched_data, restructured_path)
+                return restructured_data
+            else:
+                return enriched_data
+        else:
+            # Ensure all models have proper IDs and references as a final step
+            json_data = self.ensure_model_ids(json_data)
+            
+            # Re-save the JSON with proper IDs
+            FileManager.save_json(json_path, json_data)
+            
+            # Step 5: Restructure the JSON if requested
+            if restructure_output:
+                restructured_path = os.path.join(output_dir, f"{base_name}_restructured.json")
+                restructured_data = self.restructure_json(json_data, restructured_path)
+                return restructured_data
+            else:
+                return json_data
 
 # Convenience function for direct use
 def process_property_document(document_path: str, 
                              template_path: Optional[str] = None,
                              output_dir: Optional[str] = None,
-                             save_intermediates: bool = True) -> Dict[str, Any]:
+                             save_intermediates: bool = True,
+                             restructure_output: bool = False) -> Dict[str, Any]:
     """Process a property document to create and enrich a JSON representation.
     
     Args:
@@ -294,9 +429,10 @@ def process_property_document(document_path: str,
         template_path: Optional path to a JSON template file
         output_dir: Directory to save output files (if None, uses document directory)
         save_intermediates: Whether to save intermediate results
+        restructure_output: Whether to restructure the final JSON
         
     Returns:
         The final enriched JSON data
     """
     processor = PropertyProcessor(template_path)
-    return processor.process_document(document_path, output_dir, save_intermediates) 
+    return processor.process_document(document_path, output_dir, save_intermediates, restructure_output) 
