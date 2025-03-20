@@ -401,3 +401,128 @@ def get_data_models_description() -> str:
         description += "\n"
     
     return description 
+
+def generate_json_schema_from_dataclasses() -> Dict[str, Any]:
+    """Generate a JSON schema from the dataclasses in data_models.py.
+    
+    This function generates a proper JSON schema that can be used with OpenAI's
+    structured output feature to ensure the response follows the correct format.
+    
+    Returns:
+        A JSON schema dict that represents the property management data structure
+    """
+    import dataclasses
+    import sys
+    import os
+    import inspect
+    from typing import get_type_hints, get_origin, get_args, Dict, List, Optional, Any, Union
+    
+    # Ensure parent directory is in path
+    parent_dir = str(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if parent_dir not in sys.path:
+        sys.path.append(parent_dir)
+    
+    # Dynamically import data_models module
+    try:
+        import src.data_models as data_models_module
+    except ImportError:
+        # Try relative import if the above fails
+        try:
+            from .. import data_models as data_models_module
+        except ImportError:
+            logger.error("Unable to import data_models module")
+            return {}
+    
+    # Helper function to convert a Python type to a JSON schema type
+    def type_to_schema(typ):
+        origin = get_origin(typ)
+        args = get_args(typ)
+        
+        # Handle Optional types (Union[Type, None])
+        if origin is Union and type(None) in args:
+            non_none_args = [arg for arg in args if arg is not type(None)]
+            if len(non_none_args) == 1:
+                return {
+                    "anyOf": [
+                        type_to_schema(non_none_args[0]),
+                        {"type": "null"}
+                    ]
+                }
+            
+        # Handle Lists
+        if origin is list or origin is List:
+            if args:
+                return {
+                    "type": "array",
+                    "items": type_to_schema(args[0])
+                }
+            return {"type": "array"}
+            
+        # Handle Dicts
+        if origin is dict or origin is Dict:
+            if len(args) == 2:
+                return {
+                    "type": "object",
+                    "additionalProperties": type_to_schema(args[1])
+                }
+            return {"type": "object"}
+            
+        # Handle primitive types
+        if typ is str or typ is Optional[str]:
+            return {"type": "string"}
+        if typ is int or typ is Optional[int]:
+            return {"type": "integer"}
+        if typ is float or typ is Optional[float]:
+            return {"type": "number"}
+        if typ is bool or typ is Optional[bool]:
+            return {"type": "boolean"}
+            
+        # Handle references to other dataclasses
+        if dataclasses.is_dataclass(typ):
+            return {"$ref": f"#/definitions/{typ.__name__}"}
+            
+        # Default to any type if we can't determine
+        return {}
+    
+    # Create the schema
+    schema = {
+        "type": "object",
+        "properties": {},
+        "definitions": {}
+    }
+    
+    # Discover and process all dataclass models in the module
+    for name, cls in inspect.getmembers(data_models_module):
+        if dataclasses.is_dataclass(cls) and cls.__module__ == data_models_module.__name__:
+            # Create schema definition for this class
+            class_schema = {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+            
+            # Process each field
+            hints = get_type_hints(cls)
+            for field in dataclasses.fields(cls):
+                field_type = hints.get(field.name, Any)
+                field_schema = type_to_schema(field_type)
+                class_schema["properties"][field.name] = field_schema
+                
+                # If the field has no default value, it's required
+                if field.default is dataclasses.MISSING and field.default_factory is dataclasses.MISSING:
+                    class_schema["required"].append(field.name)
+            
+            # Add to definitions
+            schema["definitions"][cls.__name__] = class_schema
+            
+            # Add to top-level properties (assuming Property is the main object)
+            if name == "Property":
+                schema["properties"]["property"] = {"$ref": f"#/definitions/{name}"}
+            else:
+                # For other types, assume they're arrays of objects
+                schema["properties"][name.lower() + "s"] = {
+                    "type": "array",
+                    "items": {"$ref": f"#/definitions/{name}"}
+                }
+    
+    return schema 

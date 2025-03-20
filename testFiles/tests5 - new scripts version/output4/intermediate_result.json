@@ -1,0 +1,125 @@
+{
+  "property": {
+    "name": "Default Property",
+    "address": {
+      "street": "10 Miles Ave",
+      "city": "Woodbridge",
+      "state": "Connecticut",
+      "zip": "06525"
+    },
+    "owner": "Woodbridge Community Partners, LLC",
+    "propertyType": "Residential",
+    "yearBuilt": "",
+    "totalUnits": "",
+    "contactInfo": {
+      "phone": "2032335859",
+      "email": "Vadim.Tantsyura@outlook.com"
+    }
+  },
+  "units": [],
+  "tenants": [
+    {
+      "name": "Lessee",
+      "contactInfo": {
+        "phone": "1234567890",
+        "email": "lessee@example.com"
+      },
+      "lease": {
+        "propertyId": "Default Property",
+        "unitId": "",
+        "tenantId": "Lessee",
+        "startDate": "2024-07-01",
+        "endDate": "2025-06-30",
+        "rentAmount": 2425,
+        "securityDeposit": 2600,
+        "dueDate": "2024-06-24",
+        "conditionsForRefund": "Conditions for refund of the security deposit",
+        "lesseeResponsibilities": [
+          "electric",
+          "internet",
+          "cable",
+          "minor repairs up to 100",
+          "reporting leaks",
+          "pest control responsibilities"
+        ],
+        "lessorResponsibilities": [
+          "water",
+          "sewer",
+          "major repairs not due to lessee's negligence",
+          "maintenance"
+        ],
+        "lateFee": 50,
+        "gracePeriod": 10,
+        "lessorInspectionNotice": "24-hour notice",
+        "occupancyRules": "single-family residence only; no subletting or short-term rentals",
+        "petPolicy": {
+          "allowed": true,
+          "monthlyFee": 50
+        },
+        "smokingPolicy": "smoking is prohibited",
+        "governingLaw": "laws of the State of Connecticut"
+      }
+    },
+    {
+      "name": "Rebecca Rodriguez",
+      "contactInfo": {
+        "phone": "2345678901",
+        "email": "rebecca.rodriguez@example.com"
+      },
+      "lease": null
+    },
+    {
+      "name": "John Cain",
+      "contactInfo": {
+        "phone": "3456789012",
+        "email": "john.cain@example.com"
+      },
+      "lease": null
+    },
+    {
+      "name": "Jacqueline Cain",
+      "contactInfo": {
+        "phone": "4567890123",
+        "email": "jacqueline.cain@example.com"
+      },
+      "lease": null
+    }
+  ],
+  "leases": [
+    {
+      "propertyId": "Default Property",
+      "unitId": "",
+      "tenantId": "Lessee",
+      "startDate": "2024-07-01",
+      "endDate": "2025-06-30",
+      "rentAmount": 2425,
+      "securityDeposit": 2600,
+      "dueDate": "2024-06-24",
+      "conditionsForRefund": "Conditions for refund of the security deposit",
+      "lesseeResponsibilities": [
+        "electric",
+        "internet",
+        "cable",
+        "minor repairs up to 100",
+        "reporting leaks",
+        "pest control responsibilities"
+      ],
+      "lessorResponsibilities": [
+        "water",
+        "sewer",
+        "major repairs not due to lessee's negligence",
+        "maintenance"
+      ],
+      "lateFee": 50,
+      "gracePeriod": 10,
+      "lessorInspectionNotice": "24-hour notice",
+      "occupancyRules": "single-family residence only; no subletting or short-term rentals",
+      "petPolicy": {
+        "allowed": true,
+        "monthlyFee": 50
+      },
+      "smokingPolicy": "smoking is prohibited",
+      "governingLaw": "laws of the State of Connecticut"
+    }
+  ]
+}

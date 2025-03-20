@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Import from scripts
 from .scripts.document_converter import extract_relevant_text
 from .scripts.text_to_instructions import UpdateProcessor
-from .scripts.apply_instructions import DataManager
+from .scripts.apply_instructions import JSONUpdater
 from .scripts.data_enricher import DataEnricher
 from .scripts.utils import FileManager
 
@@ -34,7 +34,7 @@ class PropertyProcessor:
             template_path: Optional path to a JSON template file. If None, an empty template will be used.
         """
         self.update_processor = UpdateProcessor()
-        self.data_manager = DataManager()
+        self.data_manager = JSONUpdater()
         self.data_enricher = DataEnricher()
         self.template_path = template_path
         
@@ -113,7 +113,8 @@ class PropertyProcessor:
                                   json_data: Dict[str, Any], 
                                   instructions: Dict[str, Any],
                                   save_path: Optional[str] = None,
-                                  save_failed_path: Optional[str] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+                                  save_failed_path: Optional[str] = None,
+                                  batch_size: int = 10) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Apply structured instructions to JSON data.
         
         Args:
@@ -121,57 +122,39 @@ class PropertyProcessor:
             instructions: Dictionary containing the structured instructions
             save_path: Optional path to save the updated JSON
             save_failed_path: Optional path to save failed instructions
+            batch_size: Number of instructions to process in a single batch
             
         Returns:
             Tuple of (updated_json_data, results)
         """
         logger.info("Applying instructions to JSON data")
         
-        # Create a temporary file to use with DataManager
-        temp_json_path = os.path.join(os.path.dirname(__file__), "temp_json_data.json")
-        FileManager.save_json(temp_json_path, json_data)
+        # Create a JSONUpdater instance
+        data_manager = JSONUpdater()
         
-        # Apply instructions
-        instruction_list = instructions.get("instructions", [])
+        # Extract instructions list
+        instruction_list = instructions.get("instructions", []) if instructions else []
         
-        # Initialize results
+        if not instruction_list:
+            logger.warning("No instructions to apply")
+            return json_data, {"success": True, "failed_instructions": [], "messages": ["No instructions to apply"]}
+        
+        logger.info(f"Processing {len(instruction_list)} instructions with batch_size={batch_size}")
+        
+        # Process instructions in batches
+        updated_data, failed_instructions, messages = data_manager.update_json_batch(
+            json_data.copy(), instruction_list, batch_size
+        )
+        
+        # Format results
         results = {
-            "success": True,
-            "failed_instructions": [],
-            "messages": []
+            "success": len(failed_instructions) == 0,
+            "failed_instructions": [
+                {"index": i, "instruction": instr, "error": "Failed in batch processing"}
+                for i, instr in enumerate(failed_instructions)
+            ],
+            "messages": messages
         }
-        
-        # Create a DataManager instance
-        data_manager = DataManager()
-        
-        # Apply each instruction individually
-        updated_data = json_data.copy()
-        for i, instruction in enumerate(instruction_list):
-            try:
-                # Apply the instruction
-                updated_data, success, message = data_manager.apply_instruction(updated_data, instruction)
-                
-                # Record the result
-                results["messages"].append(message)
-                
-                if not success:
-                    results["success"] = False
-                    results["failed_instructions"].append({
-                        "index": i,
-                        "instruction": instruction,
-                        "error": message
-                    })
-            except Exception as e:
-                error_message = f"Error applying instruction {i}: {str(e)}"
-                logger.error(error_message)
-                
-                results["success"] = False
-                results["messages"].append(error_message)
-                results["failed_instructions"].append({
-                    "index": i,
-                    "instruction": instruction,
-                    "error": str(e)
-                })
         
         # Save updated JSON if requested
         if save_path:
@@ -185,10 +168,6 @@ class PropertyProcessor:
                 "messages": results.get("messages", [])
             })
             logger.info(f"Saved failed instructions to {save_failed_path}")
-        
-        # Clean up temporary file
-        if os.path.exists(temp_json_path):
-            os.remove(temp_json_path)
         
         return updated_data, results
     

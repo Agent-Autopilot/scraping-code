@@ -1,14 +1,17 @@
-"""Data Manager Script
+"""JSON Updater Script
 
-This script provides functionality to apply structured instructions to JSON data files
-for property management. It handles creating, updating, and deleting entities based on
-the instructions provided.
+This script provides a simplified way to update JSON data based on natural language instructions.
+It uses OpenAI's structured output feature to ensure the returned JSON follows a specific schema.
+
+Key benefits:
+1. Directly returns the complete updated JSON from natural language instructions
+2. Uses schema validation to ensure proper data structure
+3. Eliminates need for complex action-based logic
 """
 
 import os
 import sys
 import json
-import copy
 import logging
 import traceback
 from typing import Dict, Any, List, Optional, Tuple, Union
@@ -19,19 +22,351 @@ if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
 # Import utils for GPT client
-from .utils import GPTClient, get_data_models_description
+from .utils import GPTClient, get_data_models_description, generate_json_schema_from_dataclasses
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class DataManager:
-    """Class for applying structured instructions to JSON data files."""
+class JSONUpdater:
+    """Class for updating JSON data based on natural language instructions."""
     
     def __init__(self):
-        """Initialize the DataManager."""
+        """Initialize the JSONUpdater."""
         self.gpt_client = GPTClient()
+    
+    def update_json(self, data: Dict[str, Any], instruction: str) -> Tuple[Dict[str, Any], bool, str]:
+        """Update JSON data based on a natural language instruction.
         
+        Args:
+            data: The current JSON data
+            instruction: A natural language instruction for updating the data
+            
+        Returns:
+            Tuple of (updated_data, success, message)
+        """
+        try:
+            # Log the instruction
+            logger.info(f"Processing instruction: {instruction}")
+            
+            # Get data models description for context
+            data_models_description = get_data_models_description()
+            
+            # Get JSON schema from dataclasses
+            schema = generate_json_schema_from_dataclasses()
+            
+            # If schema generation failed, fall back to generating from data
+            if not schema:
+                logger.warning("Schema generation from dataclasses failed, falling back to data-based schema")
+                schema = self._build_basic_schema_from_data(data)
+            
+            # Create prompt for GPT
+            prompt = f"""You are a property management system that processes natural language updates into structured JSON.
+
+The property management system uses the following data models:
+{data_models_description}
+
+Current data:
+```json
+{json.dumps(data, indent=2)}
+```
+
+Your task is to update the above JSON data based on this instruction:
+"{instruction}"
+
+Please return the COMPLETE modified JSON data structure that incorporates the changes from the instruction. Do not return just the changes or explanations.
+
+Guidelines:
+1. Preserve all existing fields and values that aren't affected by the instruction
+2. Convert dates to YYYY-MM-DD format
+3. Phone numbers should be just digits without formatting
+4. Currency values should be numbers without $ signs
+5. If the instruction is unclear, make a reasonable assumption based on the context
+6. Follow the exact schema of the original data"""
+
+            # Get response from GPT using structured output and JSON schema
+            system_message = "You are a property management system that updates JSON data based on natural language instructions."
+            
+            # Use OpenAI's function calling/structured output feature with schema
+            response = self.gpt_client.client.chat.completions.create(
+                model=self.gpt_client.model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            # Extract the response content
+            response_content = response.choices[0].message.content
+            
+            if not response_content:
+                logger.error("Failed to get response from GPT")
+                return data, False, "Failed to get response from OpenAI"
+                
+            # Parse the response as JSON
+            try:
+                updated_data = json.loads(response_content)
+                logger.info("Successfully processed instruction and received updated JSON")
+                return updated_data, True, f"Successfully updated JSON based on instruction: {instruction}"
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse GPT response as JSON: {str(e)}")
+                return data, False, f"Failed to parse response as JSON: {str(e)}"
+                
+        except Exception as e:
+            logger.error(f"Error processing instruction: {str(e)}")
+            logger.error(traceback.format_exc())
+            return data, False, f"Error: {str(e)}"
+    
+    def _build_basic_schema_from_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Build a basic JSON schema based on the structure of the data.
+        
+        Args:
+            data: The JSON data to build a schema from
+            
+        Returns:
+            A JSON schema dict
+        """
+        try:
+            # Import the necessary libraries for generating the schema
+            try:
+                from genson import SchemaBuilder
+                
+                # Create a schema builder
+                builder = SchemaBuilder()
+                builder.add_object(data)
+                
+                # Get the schema
+                schema = builder.to_schema()
+                logger.info("Generated JSON schema from data structure")
+                return schema
+            except ImportError:
+                # If genson is not available, create a basic schema
+                logger.warning("genson library not available, creating a basic schema")
+                schema = {
+                    "type": "object",
+                    "properties": {}
+                }
+                
+                # Add properties based on the top-level keys in the data
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        schema["properties"][key] = {"type": "object"}
+                    elif isinstance(value, list):
+                        schema["properties"][key] = {"type": "array"}
+                    elif isinstance(value, str):
+                        schema["properties"][key] = {"type": "string"}
+                    elif isinstance(value, int) or isinstance(value, float):
+                        schema["properties"][key] = {"type": "number"}
+                    elif isinstance(value, bool):
+                        schema["properties"][key] = {"type": "boolean"}
+                    else:
+                        schema["properties"][key] = {}
+                
+                return schema
+                
+        except Exception as e:
+            logger.error(f"Error building JSON schema: {str(e)}")
+            logger.error(traceback.format_exc())
+            return {"type": "object"}
+    
+    def update_json_batch(self, data: Dict[str, Any], instructions: List[str], batch_size: int = 10) -> Tuple[Dict[str, Any], List[Dict[str, Any]], List[str]]:
+        """Process a batch of instructions together to update JSON data.
+        
+        Args:
+            data: The current JSON data
+            instructions: List of natural language instructions
+            batch_size: Maximum number of instructions to process in a single batch
+            
+        Returns:
+            Tuple of (updated_data, failed_instructions, messages)
+        """
+        # Initialize lists for results
+        failed_instructions = []
+        messages = []
+        
+        # Process instructions in batches
+        for i in range(0, len(instructions), batch_size):
+            batch = instructions[i:i+batch_size]
+            
+            if not batch:
+                continue
+            
+            # Log the batch
+            logger.info(f"Processing batch of {len(batch)} instructions (#{i+1} to #{i+len(batch)})")
+            
+            # Get data models description for context
+            data_models_description = get_data_models_description()
+            
+            # Create a prompt for batch processing
+            instructions_list = "\n".join([f"{j+1}. {instr}" for j, instr in enumerate(batch)])
+            
+            prompt = f"""You are a property management system that processes natural language updates into structured JSON.
+
+The property management system uses the following data models:
+{data_models_description}
+
+Current data:
+```json
+{json.dumps(data, indent=2)}
+```
+
+Your task is to update the above JSON data based on the following batch of instructions:
+
+{instructions_list}
+
+Apply these instructions IN ORDER, one after another, with each instruction building on the results of the previous one.
+Please return the COMPLETE modified JSON data structure after applying ALL instructions. 
+Do not return intermediate steps, explanations, or just the changes.
+
+Guidelines:
+1. Preserve all existing fields and values that aren't affected by the instructions
+2. Convert dates to YYYY-MM-DD format
+3. Phone numbers should be just digits without formatting
+4. Currency values should be numbers without $ signs
+5. If an instruction is unclear, make a reasonable assumption based on the context
+6. Follow the exact schema of the original data
+7. DO NOT CREATE DUPLICATE FIELDS OR OBJECTS - update the existing ones instead
+8. When adding new items to arrays, don't duplicate existing entries
+9. Ensure the final JSON is well-formed and maintains the original structure"""
+
+            try:
+                # Get response from GPT
+                system_message = "You are a property management system that updates JSON data based on batches of natural language instructions."
+                
+                response = self.gpt_client.client.chat.completions.create(
+                    model=self.gpt_client.model,
+                    messages=[
+                        {"role": "system", "content": system_message},
+                        {"role": "user", "content": prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1
+                )
+                
+                # Extract the response content
+                response_content = response.choices[0].message.content
+                
+                if not response_content:
+                    error_msg = "Failed to get response from GPT for batch"
+                    logger.error(error_msg)
+                    messages.append(error_msg)
+                    failed_instructions.extend(batch)
+                    continue
+                    
+                # Parse the response as JSON
+                try:
+                    updated_data = json.loads(response_content)
+                    logger.info(f"Successfully processed batch of {len(batch)} instructions")
+                    messages.append(f"Successfully processed batch of {len(batch)} instructions")
+                    data = updated_data  # Update data for next batch
+                except json.JSONDecodeError as e:
+                    error_msg = f"Failed to parse batch response as JSON: {str(e)}"
+                    logger.error(error_msg)
+                    messages.append(error_msg)
+                    failed_instructions.extend(batch)
+                    
+            except Exception as e:
+                error_msg = f"Error processing batch: {str(e)}"
+                logger.error(error_msg)
+                logger.error(traceback.format_exc())
+                messages.append(error_msg)
+                failed_instructions.extend(batch)
+        
+        return data, failed_instructions, messages
+    
+    def process_instructions(self, json_file_path: str, instructions: List[str], batch_size: int = 10) -> Dict[str, Any]:
+        """Process a list of instructions and apply them to a JSON file.
+        
+        Args:
+            json_file_path: Path to the JSON file to modify
+            instructions: List of natural language instructions
+            batch_size: Number of instructions to process in a single batch
+            
+        Returns:
+            Dictionary with results including success, failed instructions, and messages
+        """
+        # Load the JSON data
+        data = self.load_json(json_file_path)
+        
+        # Initialize results
+        results = {
+            "success": True,
+            "failed_instructions": [],
+            "messages": []
+        }
+        
+        if not instructions:
+            logger.warning("No instructions provided")
+            return results
+            
+        # Process instructions in batches
+        if batch_size > 1:
+            logger.info(f"Processing {len(instructions)} instructions in batches of up to {batch_size}")
+            updated_data, failed_batch_instructions, batch_messages = self.update_json_batch(data, instructions, batch_size)
+            
+            # Update results
+            results["messages"].extend(batch_messages)
+            
+            # Record failed instructions
+            if failed_batch_instructions:
+                results["success"] = False
+                for i, instruction in enumerate(failed_batch_instructions):
+                    results["failed_instructions"].append({
+                        "index": i,
+                        "instruction": instruction,
+                        "error": "Failed in batch processing"
+                    })
+            
+            # Update data with batch results
+            data = updated_data
+        else:
+            # Traditional one-by-one processing
+            logger.info(f"Processing {len(instructions)} instructions one by one")
+            
+            # Apply each instruction
+            for i, instruction in enumerate(instructions):
+                try:
+                    # Update the JSON with the instruction
+                    updated_data, success, message = self.update_json(data, instruction)
+                    
+                    # Record the result
+                    results["messages"].append(message)
+                    
+                    if success:
+                        # Update the data for the next instruction
+                        data = updated_data
+                    else:
+                        results["success"] = False
+                        results["failed_instructions"].append({
+                            "index": i,
+                            "instruction": instruction,
+                            "error": message
+                        })
+                        
+                except Exception as e:
+                    error_message = f"Error processing instruction {i}: {str(e)}"
+                    logger.error(error_message)
+                    logger.error(traceback.format_exc())
+                    
+                    results["success"] = False
+                    results["messages"].append(error_message)
+                    results["failed_instructions"].append({
+                        "index": i,
+                        "instruction": instruction,
+                        "error": str(e)
+                    })
+        
+        # Save the updated data
+        if results["success"] or (results["failed_instructions"] and len(results["failed_instructions"]) < len(instructions)):
+            # Only save if at least one instruction succeeded
+            if not self.save_json(json_file_path, data):
+                results["success"] = False
+                results["messages"].append(f"Failed to save updated data to {json_file_path}")
+        
+        return results
+    
     def load_json(self, file_path: str) -> Dict[str, Any]:
         """Load JSON data from a file.
         
@@ -64,6 +399,9 @@ class DataManager:
             bool: True if save was successful
         """
         try:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
+            
             with open(file_path, 'w') as f:
                 json.dump(data, f, indent=2)
             return True
@@ -71,425 +409,57 @@ class DataManager:
             logger.error(f"Error saving JSON to {file_path}: {str(e)}")
             logger.error(traceback.format_exc())
             return False
+
+# Simple helper function for direct use
+def update_json_with_instruction(data: Dict[str, Any], instruction: str) -> Tuple[Dict[str, Any], bool, str]:
+    """Update JSON data with a natural language instruction using OpenAI.
     
-    def find_entity(self, data: Dict[str, Any], entity_type: str, identifier: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[int], Optional[str]]:
-        """Find an entity in the data based on its type and identifier.
+    Args:
+        data: Current JSON data
+        instruction: Natural language instruction
         
-        Args:
-            data: The JSON data to search in
-            entity_type: Type of entity to find (e.g., 'Property', 'Unit', 'Tenant')
-            identifier: Dictionary with 'field' and 'value' to identify the entity
-            
-        Returns:
-            Tuple of (entity, index, collection_key) if found, or (None, None, None) if not found
-        """
-        # Determine the collection key based on entity type
-        collection_key = self._get_collection_key(entity_type)
-        if not collection_key:
-            logger.error(f"Unknown entity type: {entity_type}")
-            return None, None, None
-        
-        # Check if the collection exists
-        if collection_key not in data:
-            logger.warning(f"Collection {collection_key} not found in data")
-            return None, None, None
-        
-        # If the entity type is 'Property' and it's a single object (not an array)
-        if entity_type == 'Property' and isinstance(data[collection_key], dict):
-            # Check if the identifier matches
-            if identifier['field'] in data[collection_key] and data[collection_key][identifier['field']] == identifier['value']:
-                return data[collection_key], None, collection_key
-            return None, None, collection_key
-        
-        # For collections that are arrays
-        if isinstance(data[collection_key], list):
-            for i, entity in enumerate(data[collection_key]):
-                if identifier['field'] in entity and entity[identifier['field']] == identifier['value']:
-                    return entity, i, collection_key
-        
-        return None, None, collection_key
+    Returns:
+        Tuple of (updated_data, success, message)
+    """
+    updater = JSONUpdater()
+    return updater.update_json(data, instruction)
+
+# Backwards compatibility function
+def apply_instructions(json_file_path: str, instructions: List[Union[Dict[str, Any], str]]) -> Dict[str, Any]:
+    """Apply a list of instructions to a JSON file.
     
-    def _get_collection_key(self, entity_type: str) -> Optional[str]:
-        """Get the collection key for a given entity type.
-        
-        Args:
-            entity_type: Type of entity (e.g., 'Property', 'Unit', 'Tenant')
-            
-        Returns:
-            Collection key as string, or None if entity type is unknown
-        """
-        # Default mapping strategy: convert entity type to lowercase and add 's' if not already plural
-        # Special case for 'Property' which is typically singular in the data structure
-        if entity_type == 'Property':
-            return 'property'
-        
-        # For other entity types, use a simple pluralization rule
-        collection_key = entity_type.lower()
-        if not collection_key.endswith('s'):
-            collection_key += 's'
-            
-        return collection_key
+    This function is maintained for backwards compatibility with the old interface.
     
-    def apply_instruction(self, data: Dict[str, Any], instruction: Union[Dict[str, Any], str]) -> Tuple[Dict[str, Any], bool, str]:
-        """Apply a single instruction to the data.
+    Args:
+        json_file_path: Path to the JSON file to modify
+        instructions: List of instruction dictionaries or strings
         
-        Args:
-            data: The data to modify
-            instruction: The instruction to apply (can be a dictionary or a string)
-            
-        Returns:
-            Tuple of (updated_data, success, message)
-        """
-        try:
-            # Make a deep copy of the data to avoid modifying the original
-            updated_data = copy.deepcopy(data)
-            
-            # Check if instruction is a string (natural language instruction)
-            if isinstance(instruction, str):
-                # Log the natural language instruction
-                logger.info(f"Natural language instruction: {instruction}")
-                
-                # Parse the natural language instruction
-                parsed_instruction = self._parse_natural_language_instruction(instruction, data)
-                if not parsed_instruction:
-                    return data, False, f"Failed to parse natural language instruction: {instruction}"
-                
-                # Use the parsed instruction
-                action = parsed_instruction.get('action')
-                entity_type = parsed_instruction.get('entity_type')
-                identifier = parsed_instruction.get('identifier')
-                fields = parsed_instruction.get('fields', {})
-            else:
-                # Extract instruction details from structured instruction
-                action = instruction.get('action')
-                entity_type = instruction.get('entity_type')
-                identifier = instruction.get('identifier')
+    Returns:
+        Dictionary with results
+    """
+    updater = JSONUpdater()
+    
+    # Convert any dictionary instructions to strings
+    string_instructions = []
+    for instruction in instructions:
+        if isinstance(instruction, dict):
+            # Convert old instruction format to a natural language instruction
+            if 'action' in instruction and 'entity_type' in instruction and 'identifier' in instruction:
+                action = instruction['action']
+                entity_type = instruction['entity_type']
+                identifier = instruction['identifier']
                 fields = instruction.get('fields', {})
-            
-            # Validate required fields
-            if not action or not entity_type or not identifier:
-                return data, False, "Missing required fields in instruction"
-            
-            # Handle different actions
-            if action == 'create':
-                return self._create_entity(updated_data, entity_type, identifier, fields)
-            elif action == 'update':
-                return self._update_entity(updated_data, entity_type, identifier, fields)
-            elif action == 'delete':
-                return self._delete_entity(updated_data, entity_type, identifier)
+                
+                # Build a natural language instruction
+                nl_instruction = f"{action.capitalize()} {entity_type} with {identifier['field']}={identifier['value']}"
+                if fields and action != 'delete':
+                    field_strs = [f"{k}={v}" for k, v in fields.items()]
+                    nl_instruction += f" and set {', '.join(field_strs)}"
+                
+                string_instructions.append(nl_instruction)
             else:
-                return data, False, f"Unknown action: {action}"
-                
-        except Exception as e:
-            logger.error(f"Error applying instruction: {str(e)}")
-            logger.error(traceback.format_exc())
-            return data, False, f"Error: {str(e)}"
-            
-    def _parse_natural_language_instruction(self, instruction: str, current_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Parse a natural language instruction into a structured format using GPT.
-        
-        Args:
-            instruction: Natural language instruction string
-            current_data: Current JSON data for context
-            
-        Returns:
-            Structured instruction dictionary or None if parsing fails
-        """
-        try:
-            # Get data models description for context
-            data_models_description = get_data_models_description()
-            
-            # Create prompt for GPT
-            prompt = f"""You are a property management system that processes natural language updates into structured instructions.
-
-The property management system uses the following data models:
-{data_models_description}
-
-Current data:
-```json
-{json.dumps(current_data, indent=2)}
-```
-
-Your task is to analyze this natural language instruction and convert it into a structured format:
-"{instruction}"
-
-Return a JSON object with the following structure:
-{{
-    "action": "create|update|delete",
-    "entity_type": "Property|Unit|Tenant|Lease|ContactInfo|Address",
-    "identifier": {{
-        "field": "name|unitNumber|id",
-        "value": "value to identify the entity"
-    }},
-    "fields": {{
-        "field_name": "value",
-        ...
-    }}
-}}
-
-Guidelines:
-1. For 'create' action, include all necessary fields for the new entity
-2. For 'update' action, only include the fields that need to be changed
-3. For 'delete' action, only the identifier is needed
-4. Use appropriate field names from the data models
-5. Convert dates to YYYY-MM-DD format
-6. Remove formatting from phone numbers (just digits)
-7. Remove formatting from currency values (just digits)
-8. If the instruction is unclear or ambiguous, return null
-
-Example responses:
-1. For "Create a new property called The Roxbury Arms at 165-195 Mansion Rd, Cheshire, CT 06525":
-{{
-    "action": "create",
-    "entity_type": "Property",
-    "identifier": {{
-        "field": "name",
-        "value": "The Roxbury Arms"
-    }},
-    "fields": {{
-        "address": {{
-            "street": "165-195 Mansion Rd",
-            "city": "Cheshire",
-            "state": "CT",
-            "zip": "06525"
-        }}
-    }}
-}}
-
-2. For "Update the rent amount for unit 165 to $1200":
-{{
-    "action": "update",
-    "entity_type": "Unit",
-    "identifier": {{
-        "field": "unitNumber",
-        "value": "165"
-    }},
-    "fields": {{
-        "currentTenant": {{
-            "lease": {{
-                "rentAmount": 1200
-            }}
-        }}
-    }}
-}}
-
-3. For "Delete tenant John Smith from unit 101":
-{{
-    "action": "delete",
-    "entity_type": "Tenant",
-    "identifier": {{
-        "field": "name",
-        "value": "John Smith"
-    }}
-}}"""
-
-            # Get response from GPT
-            system_message = "You are a property management system that converts natural language instructions into structured format."
-            response = self.gpt_client.query(prompt, system_message, temperature=0.1)
-            
-            if not response:
-                logger.error("Failed to get response from GPT")
-                return None
-                
-            # Parse the response
-            try:
-                parsed = json.loads(response)
-                logger.info(f"Parsed instruction: {json.dumps(parsed, indent=2)}")
-                return parsed
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse GPT response as JSON: {str(e)}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error parsing natural language instruction: {str(e)}")
-            logger.error(traceback.format_exc())
-            return None
-    
-    def _create_entity(self, data: Dict[str, Any], entity_type: str, identifier: Dict[str, Any], fields: Dict[str, Any]) -> Tuple[Dict[str, Any], bool, str]:
-        """Create a new entity in the data.
-        
-        Args:
-            data: The JSON data to modify
-            entity_type: Type of entity to create
-            identifier: Dictionary with 'field' and 'value' to identify the entity
-            fields: Dictionary of fields to set on the new entity
-            
-        Returns:
-            Tuple of (updated_data, success, message)
-        """
-        # Find the collection key
-        collection_key = self._get_collection_key(entity_type)
-        if not collection_key:
-            return data, False, f"Unknown entity type: {entity_type}"
-        
-        # Check if the entity already exists
-        entity, index, _ = self.find_entity(data, entity_type, identifier)
-        
-        # If the entity exists and it's a Property, update it instead of returning an error
-        if entity and entity_type == 'Property':
-            # Update the existing property with the new fields
-            for field, value in fields.items():
-                data[collection_key][field] = value
-            return data, True, f"Updated existing {entity_type} with {identifier['field']}={identifier['value']}"
-        elif entity:
-            return data, False, f"{entity_type} with {identifier['field']}={identifier['value']} already exists"
-        
-        # Create the new entity
-        new_entity = {identifier['field']: identifier['value']}
-        new_entity.update(fields)
-        
-        # Add the entity to the collection
-        if entity_type == 'Property' and collection_key == 'property':
-            # For Property, update the existing object
-            if collection_key in data and isinstance(data[collection_key], dict):
-                # Merge the new entity with the existing property
-                data[collection_key].update(new_entity)
-            else:
-                # Replace the entire object
-                data[collection_key] = new_entity
+                logger.warning(f"Skipping invalid instruction: {instruction}")
         else:
-            # For other entities, add to the array
-            if collection_key not in data:
-                data[collection_key] = []
-            data[collection_key].append(new_entity)
-        
-        return data, True, f"Created {entity_type} with {identifier['field']}={identifier['value']}"
+            string_instructions.append(instruction)
     
-    def _update_entity(self, data: Dict[str, Any], entity_type: str, identifier: Dict[str, Any], fields: Dict[str, Any]) -> Tuple[Dict[str, Any], bool, str]:
-        """Update an existing entity in the data.
-        
-        Args:
-            data: The JSON data to modify
-            entity_type: Type of entity to update
-            identifier: Dictionary with 'field' and 'value' to identify the entity
-            fields: Dictionary of fields to update on the entity
-            
-        Returns:
-            Tuple of (updated_data, success, message)
-        """
-        # Find the entity
-        entity, index, collection_key = self.find_entity(data, entity_type, identifier)
-        
-        if not entity:
-            # If the entity doesn't exist, create it instead
-            if entity_type == 'Property':
-                # For Property, create a new property with the fields
-                if collection_key not in data:
-                    data[collection_key] = {}
-                
-                # Set the identifier field
-                data[collection_key][identifier['field']] = identifier['value']
-                
-                # Update with the fields
-                for field, value in fields.items():
-                    data[collection_key][field] = value
-                
-                return data, True, f"Created new {entity_type} with {identifier['field']}={identifier['value']}"
-            else:
-                # For other entities, create a new entity in the collection
-                new_entity = {identifier['field']: identifier['value']}
-                new_entity.update(fields)
-                
-                if collection_key not in data:
-                    data[collection_key] = []
-                
-                data[collection_key].append(new_entity)
-                return data, True, f"Created new {entity_type} with {identifier['field']}={identifier['value']}"
-        
-        # Update the entity
-        if entity_type == 'Property' and index is None:
-            # For Property, update the object directly
-            for field, value in fields.items():
-                data[collection_key][field] = value
-        else:
-            # For other entities, update the array element
-            for field, value in fields.items():
-                data[collection_key][index][field] = value
-        
-        return data, True, f"Updated {entity_type} with {identifier['field']}={identifier['value']}"
-    
-    def _delete_entity(self, data: Dict[str, Any], entity_type: str, identifier: Dict[str, Any]) -> Tuple[Dict[str, Any], bool, str]:
-        """Delete an entity from the data.
-        
-        Args:
-            data: The JSON data to modify
-            entity_type: Type of entity to delete
-            identifier: Dictionary with 'field' and 'value' to identify the entity
-            
-        Returns:
-            Tuple of (updated_data, success, message)
-        """
-        # Find the entity
-        entity, index, collection_key = self.find_entity(data, entity_type, identifier)
-        
-        if not entity:
-            return data, False, f"{entity_type} with {identifier['field']}={identifier['value']} not found"
-        
-        # Delete the entity
-        if entity_type == 'Property' and index is None:
-            # For Property, clear the object
-            data[collection_key] = {}
-        else:
-            # For other entities, remove from the array
-            data[collection_key].pop(index)
-        
-        return data, True, f"Deleted {entity_type} with {identifier['field']}={identifier['value']}"
-    
-    def apply_instructions(self, json_file_path: str, instructions: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Apply a list of instructions to a JSON file.
-        
-        Args:
-            json_file_path: Path to the JSON file to modify
-            instructions: List of instruction dictionaries
-            
-        Returns:
-            Dictionary with results including success, failed instructions, and messages
-        """
-        # Load the JSON data
-        data = self.load_json(json_file_path)
-        
-        # Initialize results
-        results = {
-            "success": True,
-            "failed_instructions": [],
-            "messages": []
-        }
-        
-        # Apply each instruction
-        for i, instruction in enumerate(instructions):
-            try:
-                # Apply the instruction
-                data, success, message = self.apply_instruction(data, instruction)
-                
-                # Record the result
-                results["messages"].append(message)
-                
-                if not success:
-                    results["success"] = False
-                    results["failed_instructions"].append({
-                        "index": i,
-                        "instruction": instruction,
-                        "error": message
-                    })
-                    
-            except Exception as e:
-                error_message = f"Error applying instruction {i}: {str(e)}"
-                logger.error(error_message)
-                logger.error(traceback.format_exc())
-                
-                results["success"] = False
-                results["messages"].append(error_message)
-                results["failed_instructions"].append({
-                    "index": i,
-                    "instruction": instruction,
-                    "error": str(e)
-                })
-        
-        # Save the updated data
-        if results["success"] or (results["failed_instructions"] and len(results["failed_instructions"]) < len(instructions)):
-            # Only save if at least one instruction succeeded
-            if not self.save_json(json_file_path, data):
-                results["success"] = False
-                results["messages"].append(f"Failed to save updated data to {json_file_path}")
-        
-        return results 
+    return updater.process_instructions(json_file_path, string_instructions) 

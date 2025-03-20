@@ -40,7 +40,7 @@ def test_property_processor():
     current_dir = Path(__file__).parent
     
     # Create output directory
-    output_dir = os.path.join(current_dir, "output3")
+    output_dir = os.path.join(current_dir, "output4")
     os.makedirs(output_dir, exist_ok=True)
     
     # Define paths to the sample documents
@@ -96,7 +96,8 @@ def test_property_processor():
         result,  # Use the result from the first document
         instructions,
         os.path.join(output_dir, "final_result.json"),
-        os.path.join(output_dir, "woodbridge_failed_instructions.json")
+        os.path.join(output_dir, "woodbridge_failed_instructions.json"),
+        batch_size=10  # Process in batches of 10 instructions for better performance
     )
     
     # Enrich the final JSON with text from the second document

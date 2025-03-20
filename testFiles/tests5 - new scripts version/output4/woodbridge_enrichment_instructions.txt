@@ -1,0 +1,9 @@
+1. Update the EIN for the property owner to "33-3004577" to correct the format from "333004577" to the standard format with a hyphen.
+2. Add a description for the property indicating that it is a "duplex" to provide more context about the property type.
+3. Update the `yearBuilt` field for the property to include the year it was built, if known, to provide complete information about the property.
+4. Update the `totalUnits` field for the property to reflect that it is a duplex, indicating there are 2 units.
+5. Ensure that the `unitId` for the lease associated with the tenant "Lessee" is filled in with the correct unit number, as it is currently empty.
+6. Add a `unit` entry for the property to represent the duplex units, including their respective unit numbers and current tenants, if applicable.
+7. Verify and update the `contactInfo` for the property owner to include a physical address if available, as it is currently missing.
+8. Ensure that the `propertyType` field is consistent with the description of the property as a duplex, which may need to be explicitly stated if it is not already categorized correctly.
+9. Review the tenant list to ensure that all tenants have a lease associated with them if they are occupying a unit, and update the lease information accordingly for tenants without leases.

@@ -1,0 +1,15 @@
+{
+  "analysis": "This update provides detailed information about a lease agreement for a property located at 10 Miles Ave, Woodbridge, Connecticut, including terms related to rent, utilities, repairs, security deposit, late payments, pets, tenant responsibilities, lessor information, tenant information, inspection, termination, and governing law.",
+  "instructions": [
+    "Create a new property at 10 Miles Ave, Woodbridge, Connecticut",
+    "Set the lease start date to 2024-07-01",
+    "Set the lease end date to 2025-06-30",
+    "Set the monthly rent amount to 2425",
+    "Set the total amount with pet fee to 2475",
+    "Set the rent payment due date to the 1st day of each calendar month",
+    "Set the rent payment method to Bank deposit to Lessor\u2019s Account at Bank of America or designated place",
+    "Specify that the lessee shall pay for electric, internet, and cable services",
+    "Specify that the lessor shall be responsible for water and sewer costs",
+    "Specify that the lessee shall pay for professional cleaning services before vacating"
+  ]
+}

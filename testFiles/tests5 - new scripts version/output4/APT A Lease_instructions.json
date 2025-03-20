@@ -1,0 +1,27 @@
+{
+  "analysis": "This update provides comprehensive lease information for a property located at 10 Miles Ave, Woodbridge, Connecticut, including details about rent, security deposit, utilities, repairs, late payments, inspection rights, occupancy rules, pet policies, contact information for the lessor, tenant names, additional terms, and governing law.",
+  "instructions": [
+    "Create a new property at 10 Miles Ave, Woodbridge, Connecticut",
+    "Set the lease start date to 2024-07-01",
+    "Set the lease end date to 2025-06-30",
+    "Set the monthly rent amount to 2425",
+    "Set the total amount with pet fee to 2475",
+    "Set the payment due date to the 1st day of each calendar month, beginning 2024-06-24",
+    "Set the security deposit amount to 2600",
+    "Set the conditions for refund of the security deposit",
+    "Assign the lessee responsibility for electric, internet, and cable services",
+    "Assign the lessor responsibility for water and sewer costs",
+    "Assign the lessee responsibility for minor repairs up to 100",
+    "Assign the lessor responsibility for major repairs not due to lessee's negligence",
+    "Set the late fee to 50 for any rent payment not paid by the due date with a grace period of 10 days",
+    "Grant the lessor the right to inspect the premises with 24-hour notice",
+    "Set occupancy rules to allow single-family residence only and prohibit subletting or short-term rentals",
+    "Allow pets with a monthly fee of 50",
+    "Set the lessor name to Woodbridge Community Partners, LLC",
+    "Set the lessor phone number to 2032335859",
+    "Set the lessor email to Vadim.Tantsyura@outlook.com",
+    "Add tenants Rebecca Rodriguez, John Cain, and Jacqueline Cain",
+    "Set additional terms regarding maintenance, reporting leaks, smoking prohibition, and pest control responsibilities",
+    "Set the governing law to the laws of the State of Connecticut"
+  ]
+}

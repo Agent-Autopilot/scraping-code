@@ -1,0 +1,88 @@
+{
+  "property": {
+    "name": "Default Property",
+    "address": {
+      "street": "10 Miles Ave",
+      "city": "Woodbridge",
+      "state": "Connecticut",
+      "zip": ""
+    },
+    "owner": "Woodbridge Community Partners, LLC",
+    "propertyType": "",
+    "yearBuilt": "",
+    "totalUnits": "",
+    "contactInfo": {
+      "phone": "2032335859",
+      "email": "Vadim.Tantsyura@outlook.com"
+    }
+  },
+  "units": [],
+  "tenants": [
+    {
+      "name": "Lessee",
+      "contactInfo": {},
+      "lease": {
+        "propertyId": "",
+        "unitId": "",
+        "tenantId": "",
+        "startDate": "2024-07-01",
+        "endDate": "2025-06-30",
+        "rentAmount": 2425,
+        "securityDeposit": 2600,
+        "dueDate": "2024-06-24"
+      }
+    },
+    {
+      "name": "Rebecca Rodriguez",
+      "contactInfo": {},
+      "lease": null
+    },
+    {
+      "name": "John Cain",
+      "contactInfo": {},
+      "lease": null
+    },
+    {
+      "name": "Jacqueline Cain",
+      "contactInfo": {},
+      "lease": null
+    }
+  ],
+  "leases": [
+    {
+      "propertyId": "",
+      "unitId": "",
+      "tenantId": "",
+      "startDate": "2024-07-01",
+      "endDate": "2025-06-30",
+      "rentAmount": 2425,
+      "securityDeposit": 2600,
+      "dueDate": "2024-06-24",
+      "conditionsForRefund": "Conditions for refund of the security deposit",
+      "lesseeResponsibilities": [
+        "electric",
+        "internet",
+        "cable",
+        "minor repairs up to 100",
+        "reporting leaks",
+        "pest control responsibilities"
+      ],
+      "lessorResponsibilities": [
+        "water",
+        "sewer",
+        "major repairs not due to lessee's negligence",
+        "maintenance"
+      ],
+      "lateFee": 50,
+      "gracePeriod": 10,
+      "lessorInspectionNotice": "24-hour notice",
+      "occupancyRules": "single-family residence only; no subletting or short-term rentals",
+      "petPolicy": {
+        "allowed": true,
+        "monthlyFee": 50
+      },
+      "smokingPolicy": "smoking is prohibited",
+      "governingLaw": "laws of the State of Connecticut"
+    }
+  ]
+}

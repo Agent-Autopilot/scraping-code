@@ -1,0 +1,12 @@
+1. Update the zip code for the property address to "06525" as it is currently missing.
+2. Set the property type for "Default Property" to "Residential" based on the context of the lease agreement.
+3. Update the lease's propertyId to match the property ID associated with "Default Property."
+4. Update the lease's unitId to reflect the correct unit number once units are added to the property.
+5. Add the tenantId for "Lessee" in the lease section to uniquely identify the tenant.
+6. Update the lease's end date to "2025-06-30" as it is currently incorrectly stated as "June 31, 2025," which is not a valid date.
+7. Update the payment due date to "2024-06-24" for the first payment, as it is currently set to the 1st day of each calendar month, which is inconsistent with the original text data.
+8. Add contact information for each tenant, including phone and email, as they are currently missing.
+9. Ensure that the tenant "Lessee" has a valid lease associated with them, as their lease is currently null.
+10. Add the conditions for refund of the security deposit to the lease section to ensure clarity on the terms.
+11. Ensure that the pet policy is reflected in the lease section, including the monthly fee of $50 for pets.
+12. Confirm that the smoking policy is included in the lease section, stating that smoking is prohibited.

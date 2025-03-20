@@ -1,0 +1,30 @@
+{
+  "analysis": "This update provides detailed information about a lease agreement for a property located at 10 Miles Ave, Woodbridge, Connecticut, including terms related to rent, utilities, repairs, security deposit, late payments, pets, tenant responsibilities, lessor information, tenant information, inspection, termination, and governing law.",
+  "instructions": [
+    "Create a new property at 10 Miles Ave, Woodbridge, Connecticut",
+    "Set the lease start date to 2024-07-01",
+    "Set the lease end date to 2025-06-30",
+    "Set the monthly rent amount to 2425",
+    "Set the total amount with pet fee to 2475",
+    "Set the rent payment due date to the 1st day of each calendar month",
+    "Set the rent payment method to Bank deposit to Lessor\u2019s Account at Bank of America or designated place",
+    "Specify that the lessee shall pay for electric, internet, and cable services",
+    "Specify that the lessor shall be responsible for water and sewer costs",
+    "Specify that the lessee shall pay for professional cleaning services before vacating",
+    "Set the lessee's responsibility for minor repairs up to 100",
+    "Set the lessor's reimbursement for repairs over 250 unless caused by lessee's negligence",
+    "Set the security deposit amount to 2600",
+    "Specify conditions for security deposit refund: must have no outstanding utility bills or rent payments, no unreasonable damage or alterations, return all keys, and remove all personal items",
+    "Set the late fee to 50 for any rent payment not paid by the due date with a grace period of 10 days",
+    "Allow pets with a monthly fee of 50",
+    "Specify that the lessee must comply with pet rules and regulations",
+    "Specify tenant responsibilities including maintaining the premises, reporting leaks, maintaining heat, not leaving windows or doors open during inclement weather, and not using the premises for excessive parties or short-term rentals",
+    "Set the lessor name to Woodbridge Community Partners, LLC",
+    "Set the lessor contact phone number to 2032335859",
+    "Set the lessor email to Vadim.Tantsyura@outlook.com",
+    "Add tenants: Rebecca Rodriguez, John Cain, Jacqueline Cain",
+    "Specify that the lessee has the opportunity to inspect the premises before occupancy",
+    "Set the requirement for lessee to provide 30 days written notice for early termination and responsibility for rent for the remainder of the lease term",
+    "Specify that the lease agreement shall be governed by the Laws of the State of Connecticut"
+  ]
+}
