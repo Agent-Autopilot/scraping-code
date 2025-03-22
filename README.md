@@ -15,11 +15,13 @@ Landlord Autopilot streamlines property management by automatically extracting a
 ### Source Files (`src/`)
 
 - **`property_processor.py`**: Main interface that orchestrates the entire document processing pipeline
-  - Handles document intake from various formats (PDF, DOCX, TXT)
+  - Handles document intake from various formats (PDF, DOCX, TXT, XLSX)
   - Coordinates text extraction, instruction generation, and JSON updates
   - Manages the enrichment process to fill information gaps
   - Provides both object-oriented and functional interfaces for flexibility
   - Maintains state between multiple document processing operations
+  - Supports batch processing of instructions for improved performance
+  - Includes JSON restructuring to optimize hierarchical relationships
 
 - **`data_models.py`**: Comprehensive data structures for property management entities
   - Defines hierarchical relationships between properties, units, tenants, and leases
@@ -27,22 +29,21 @@ Landlord Autopilot streamlines property management by automatically extracting a
   - Provides optional fields throughout to handle partial information
   - Uses type hints for better code reliability and IDE support
   - Structures data to mirror real-world property management relationships
+  - Ensures all models have unique IDs to prevent duplication
+
+- **`default.json`**: Template JSON structure for new property projects
+  - Provides a standardized starting point for new data collections
+  - Includes empty sections for all key data entities
 
 ### Scripts (`src/scripts/`)
 
-- **`data_manager.py`**: Core data manipulation engine
+- **`apply_instructions.py`**: Core data manipulation engine
   - Processes structured instructions to update JSON data
   - Handles entity creation, updates, and relationship management
   - Maintains data integrity during updates
   - Tracks failed instructions for debugging
   - Implements intelligent merging of new and existing data
-
-- **`nlp_processor.py`**: Natural language understanding component
-  - Analyzes document text to determine intent and extract entities
-  - Transforms unstructured text into actionable instructions
-  - Uses OpenAI's language models with specialized prompts
-  - Handles ambiguity in natural language descriptions
-  - Normalizes dates, currency values, and contact information
+  - Supports batch processing of multiple instructions for improved performance
 
 - **`text_to_instructions.py`**: Specialized text processing module
   - Converts property-specific language into structured instructions
@@ -59,11 +60,17 @@ Landlord Autopilot streamlines property management by automatically extracting a
   - Returns enrichment instructions without modifying data directly
 
 - **`document_converter.py`**: Multi-format document processing
-  - Extracts text from PDF, DOCX, and plain text files
+  - Extracts text from PDF, DOCX, XLSX, and plain text files
   - Filters irrelevant content to focus on property information
   - Preserves important structural elements from documents
   - Handles document encoding and formatting issues
   - Uses AI to identify the most relevant sections of documents
+
+- **`json_restructurer.py`**: Optimizes JSON structure based on entity relationships
+  - Analyzes ID references to identify parent-child relationships
+  - Reorganizes JSON to create a more logical hierarchy
+  - Enhances data accessibility and navigability
+  - Preserves all original data while improving structure
 
 - **`utils.py`**: Shared utility functions and helper classes
   - `GPTClient`: Robust OpenAI API wrapper with error handling and retries
