@@ -56,6 +56,7 @@ coverage.xml
 temp/
 output/
 testFiles/
+old_src/
 
 # Documentation
 _build/
