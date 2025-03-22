@@ -1,7 +1,0 @@
-Create unit [UNIT_NUMBER] (unit number not provided, please specify) - Error: Instruction processing failed
-Add tenant John Cain to unit [UNIT_NUMBER] - Error: Instruction processing failed
-Set lease for unit [UNIT_NUMBER] with rent 2425 and security deposit 4850 - Error: Instruction processing failed
-Set lease start date to 2024-07-01 - Error: Instruction processing failed
-Set lease end date to 2025-06-30 - Error: Instruction processing failed
-Set lease due date to 1st day of each calendar month - Error: Instruction processing failed
-Add document Lease with name DocuSign Envelope to property - Error: Instruction processing failed

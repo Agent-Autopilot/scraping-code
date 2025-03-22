@@ -1,1 +1,0 @@
-1. Update the current tenant for unit 173 to VACANT and set the lease start date to 2021-05-01.

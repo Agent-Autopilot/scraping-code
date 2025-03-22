@@ -55,6 +55,7 @@ coverage.xml
 *.log
 temp/
 output/
+testFiles/
 
 # Documentation
 _build/

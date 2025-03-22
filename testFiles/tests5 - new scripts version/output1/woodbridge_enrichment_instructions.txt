@@ -1,3 +1,0 @@
-1. Update the `zip` field in the `address` object of the JSON data to include the appropriate zip code for Woodbridge, CT.
-2. Add a `contactInfo` field to the `owner` object in the JSON data. Since the text does not provide specific contact details, you can initialize it as an empty object or with placeholder values.
-3. Add an entry to the `units` array in the JSON data to reflect that the property is a duplex. You could create two unit objects, each with a `unitNumber` (e.g., "Unit 1" and "Unit 2") and leave the `currentTenant` field as `null` for now, since tenant information is already provided separately.
