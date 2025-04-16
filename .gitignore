@@ -57,6 +57,9 @@ temp/
 output/
 testFiles/
 old_src/
+credentials.json
+token.json
+attachments/
 
 # Documentation
 _build/
