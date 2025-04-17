@@ -15,12 +15,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Import from scripts
-from .scripts.document_converter import extract_relevant_text
-from .scripts.text_to_instructions import UpdateProcessor
-from .scripts.apply_instructions import JSONUpdater
-from .scripts.data_enricher import DataEnricher
-from .scripts.json_restructurer import JSONRestructurer
-from .scripts.utils import FileManager
+from src.scripts.document_converter import extract_relevant_text
+from src.scripts.text_to_instructions import UpdateProcessor
+from src.scripts.apply_instructions import JSONUpdater
+from src.scripts.data_enricher import DataEnricher
+from src.scripts.json_restructurer import JSONRestructurer
+from src.scripts.utils import FileManager
 
 class PropertyProcessor:
     """Unified interface for processing property documents and data.

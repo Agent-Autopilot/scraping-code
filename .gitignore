@@ -59,7 +59,11 @@ testFiles/
 old_src/
 credentials.json
 token.json
+src/scripts/GmailCredentials/credentials.json
+src/scripts/GmailCredentials/token.json
 attachments/
+src/Emails/*
+!src/Emails/.gitkeep
 
 # Documentation
 _build/
